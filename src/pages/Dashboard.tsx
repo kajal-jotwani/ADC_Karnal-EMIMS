@@ -2,7 +2,6 @@ import React from 'react';
 import { useData } from '../contexts/DataContext';
 import StatCard from '../components/dashboard/StatCard';
 import PerformanceChart from '../components/dashboard/PerformanceChart';
-import TeacherWorkload from '../components/dashboard/TeacherWorkload';
 import AlertsWidget from '../components/dashboard/AlertsWidget';
 import FilterBar from '../components/shared/FilterBar';
 import ExportButton from '../components/shared/ExportButton';
@@ -17,13 +16,6 @@ const subjectPerformanceData = [
   { subject: 'Computer', average: 88, district: 84, state: 81 },
 ];
 
-const teacherWorkloadData = [
-  { teacher: 'Jane Smith', monday: 6, tuesday: 8, wednesday: 4, thursday: 7, friday: 5, saturday: 0 },
-  { teacher: 'John Doe', monday: 7, tuesday: 5, wednesday: 8, thursday: 6, friday: 4, saturday: 2 },
-  { teacher: 'Alice Johnson', monday: 5, tuesday: 6, wednesday: 7, thursday: 8, friday: 4, saturday: 0 },
-  { teacher: 'Bob Wilson', monday: 8, tuesday: 7, wednesday: 6, thursday: 3, friday: 7, saturday: 1 },
-  { teacher: 'Carol White', monday: 4, tuesday: 6, wednesday: 8, thursday: 7, friday: 5, saturday: 2 },
-];
 
 const alertsData = [
   { id: '1', type: 'error', message: 'Missing attendance data for Grade 8B (Feb 15, 2025)', time: '2 hours ago' },
@@ -130,14 +122,7 @@ const Dashboard: React.FC = () => {
             title="Recent Alerts"
           />
         </div>
-        
-        {/* Teacher Workload - Full width */}
-        <div className="lg:col-span-3 mt-6">
-          <TeacherWorkload 
-            data={teacherWorkloadData} 
-            title="Teacher Workload Distribution"
-          />
-        </div>
+
       </div>
       
       {/* Additional stats row */}

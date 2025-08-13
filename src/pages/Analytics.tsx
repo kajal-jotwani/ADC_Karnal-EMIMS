@@ -1,7 +1,7 @@
 import React from 'react';
 import SubjectScoresByClass from '../components/visualizations/SubjectScoresByClass';
 import SchoolPerformanceChart from '../components/visualizations/SchoolPerformanceChart';
-import StudentProgressChart from '../components/visualizations/StudentProgressChart';
+// import StudentProgressChart from '../components/visualizations/StudentProgressChart';
 import ExportButton from '../components/shared/ExportButton';
 import { BarChart3, TrendingUp, Users } from 'lucide-react';
 
@@ -64,9 +64,6 @@ const Analytics: React.FC = () => {
 
         {/* School Performance Chart */}
         <SchoolPerformanceChart />
-
-        {/* Student Progress Chart */}
-        <StudentProgressChart />
       </div>
     </div>
   );

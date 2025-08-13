@@ -5,6 +5,7 @@ import PerformanceChart from '../components/dashboard/PerformanceChart';
 import { Users, UserCog, BookOpen, MapPin, Phone, Mail, Calendar, Award } from 'lucide-react';
 import DataTable from '../components/shared/DataTable';
 import { ColumnDef } from '@tanstack/react-table';
+import TeacherWorkload from '../components/dashboard/TeacherWorkload';
 
 // Types
 interface Teacher {
@@ -53,6 +54,14 @@ const schoolData = {
     graduation: 96
   }
 };
+
+const teacherWorkloadData = [
+  { teacher: 'Jane Smith', monday: 6, tuesday: 8, wednesday: 4, thursday: 7, friday: 5, saturday: 0 },
+  { teacher: 'John Doe', monday: 7, tuesday: 5, wednesday: 8, thursday: 6, friday: 4, saturday: 2 },
+  { teacher: 'Alice Johnson', monday: 5, tuesday: 6, wednesday: 7, thursday: 8, friday: 4, saturday: 0 },
+  { teacher: 'Bob Wilson', monday: 8, tuesday: 7, wednesday: 6, thursday: 3, friday: 7, saturday: 1 },
+  { teacher: 'Carol White', monday: 4, tuesday: 6, wednesday: 8, thursday: 7, friday: 5, saturday: 2 },
+];
 
 const SchoolDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -246,6 +255,12 @@ const SchoolDetail: React.FC = () => {
           columns={teacherColumns} 
         />
       </div>
+      <div className="lg:col-span-3 mt-6">
+          <TeacherWorkload 
+            data={teacherWorkloadData} 
+            title="Teacher Workload Distribution"
+          />
+        </div>
     </div>
   );
 };
