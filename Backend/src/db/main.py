@@ -4,6 +4,12 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 
 from src.config import Config
 
+#Importing all models 
+from .models import(
+    District, School, SchoolClass, Teacher, Student, Subject,
+    TeacherAssignment, StudentSubject, Marks, Attendance   
+)
+
 async_engine = AsyncEngine(
     create_engine(
         url=Config.DATABASE_URL,
