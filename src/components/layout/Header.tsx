@@ -32,19 +32,6 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
             </div>
           </div>
           
-          <div className="hidden md:block">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search size={18} className="text-gray-400" />
-              </div>
-              <input
-                type="text"
-                className="input pl-10 w-64 h-9 bg-gray-50"
-                placeholder="Search..."
-              />
-            </div>
-          </div>
-          
           <div className="flex items-center space-x-4">
             <button className="p-1.5 rounded-full text-gray-500 hover:text-primary-600 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
               <Bell size={20} />
