@@ -16,7 +16,29 @@ class AttendanceStatus(str, Enum):
     absent = "Absent"
 
 
+class UserRole(str, Enum):
+    District_ADMIN = "District_ADMIN"
+    School_ADMIN = "School_ADMIN"
+    Teacher = "Teacher"
+
 # Core Models
+
+class User(SQLModel, table=True):
+    __tablename__ = "user"
+
+    uid: uuid.UUID = Field(
+        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    )
+    email: str = Field(index=True, unique=True)
+    password_hash: str
+    role: UserRole
+    linked_id: uuid.UUID | None = Field(default=None) # Links to teacher/principal/district tables
+    created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+    updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
+
+    district: Optional["District"] = Relationship(back_populates="user")
+    school: Optional["School"] = Relationship(back_populates="user")
+    teacher: Optional["Teacher"] = Relationship(back_populates="user")
 
 class District(SQLModel, table=True):
     __tablename__ = "district"
@@ -26,6 +48,7 @@ class District(SQLModel, table=True):
     )
     name: str
 
+    user: Optional[User] = Relationship(back_populates="district")
     schools: List[School] = Relationship(back_populates="district")
 
 
@@ -39,6 +62,7 @@ class School(SQLModel, table=True):
     district_id: uuid.UUID = Field(foreign_key="district.uid")
 
     district: Optional[District] = Relationship(back_populates="schools")
+    user: Optional[User] = Relationship(back_populates="school")
     classes: List[SchoolClass] = Relationship(back_populates="school")
     teachers: List[Teacher] = Relationship(back_populates="school")
 
@@ -68,6 +92,7 @@ class Teacher(SQLModel, table=True):
     school_id: uuid.UUID = Field(foreign_key="school.uid")
 
     school: Optional[School] = Relationship(back_populates="teachers")
+    user: Optional[User] = Relationship(back_populates="teacher")
     assignments: List[TeacherAssignment] = Relationship(back_populates="teacher")
     marks: List[Marks] = Relationship(back_populates="teacher")
 
