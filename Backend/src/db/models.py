@@ -27,7 +27,8 @@ class User(SQLModel, table=True):
     __tablename__ = "user"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     email: str = Field(index=True, unique=True)
     password_hash: str
@@ -44,7 +45,8 @@ class District(SQLModel, table=True):
     __tablename__ = "district"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     name: str
 
@@ -56,7 +58,8 @@ class School(SQLModel, table=True):
     __tablename__ = "school"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     name: str
     district_id: uuid.UUID = Field(foreign_key="district.uid")
@@ -71,7 +74,8 @@ class SchoolClass(SQLModel, table=True):
     __tablename__ = "SchoolClass"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     name: str
     school_id: uuid.UUID = Field(foreign_key="school.uid")
@@ -86,7 +90,8 @@ class Teacher(SQLModel, table=True):
     __tablename__ = "teacher"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     name: str
     school_id: uuid.UUID = Field(foreign_key="school.uid")
@@ -101,7 +106,8 @@ class Student(SQLModel, table=True):
     __tablename__ = "student"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     name: str
     roll_number: str
@@ -117,7 +123,8 @@ class Subject(SQLModel, table=True):
     __tablename__ = "subject"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     name: str
 
@@ -130,7 +137,8 @@ class TeacherAssignment(SQLModel, table=True):
     __tablename__ = "teacher_assignment"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     teacher_id: uuid.UUID = Field(foreign_key="teacher.uid")
     class_id: uuid.UUID = Field(foreign_key="SchoolClass.uid")
@@ -145,7 +153,8 @@ class StudentSubject(SQLModel, table=True):
     __tablename__ = "student_subject"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     student_id: uuid.UUID = Field(foreign_key="student.uid")
     subject_id: uuid.UUID = Field(foreign_key="subject.uid")
@@ -158,7 +167,8 @@ class Marks(SQLModel, table=True):
     __tablename__ = "marks"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     student_id: uuid.UUID = Field(foreign_key="student.uid")
     subject_id: uuid.UUID = Field(foreign_key="subject.uid")
@@ -174,7 +184,8 @@ class Attendance(SQLModel, table=True):
     __tablename__ = "attendance"
 
     uid: uuid.UUID = Field(
-        sa_column=Column(pg.UUID(as_uuid=True), primary_key=True, default_factory=uuid.uuid4)
+    default_factory=uuid.uuid4,
+    sa_column=Column(pg.UUID(as_uuid=True), primary_key=True),
     )
     student_id: uuid.UUID = Field(foreign_key="student.uid")
     class_id: uuid.UUID = Field(foreign_key="SchoolClass.uid")
