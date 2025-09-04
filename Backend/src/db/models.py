@@ -34,6 +34,8 @@ class User(SQLModel, table=True):
     password_hash: str
     role: UserRole
     linked_id: uuid.UUID | None = Field(default=None) # Links to teacher/principal/district tables
+    is_active: bool = Field(default=True)
+    must_change_password: bool = Field(default=False)
     created_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
     updated_at: datetime = Field(sa_column=Column(pg.TIMESTAMP, default=datetime.now))
 
