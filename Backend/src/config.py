@@ -9,4 +9,3 @@ class Settings(BaseSettings):
     )
 
 Config = Settings()
-print("Loaded DB URL:", Config.DATABASE_URL)

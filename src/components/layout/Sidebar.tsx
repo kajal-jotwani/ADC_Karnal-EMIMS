@@ -1,5 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../../contexts/AuthContext';
 import {
   LayoutDashboard,
   School,
@@ -11,7 +12,8 @@ import {
   BarChart3,
   Settings,
   X,
-  HelpCircle
+  HelpCircle,
+  GraduationCap
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -44,6 +46,46 @@ const NavItem: React.FC<NavItemProps> = ({ to, icon, label }) => {
 };
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
+  const { user } = useAuth();
+
+  const getNavigationItems = () => {
+    const baseItems = [
+      { to: '/', icon: <LayoutDashboard size={20} />, label: 'Dashboard', roles: ['admin', 'principal', 'teacher'] },
+    ];
+
+    if (user?.role === 'admin') {
+      return [
+        ...baseItems,
+        { to: '/schools', icon: <School size={20} />, label: 'Schools', roles: ['admin'] },
+        { to: '/teachers', icon: <UserCog size={20} />, label: 'Teachers', roles: ['admin'] },
+        { to: '/students', icon: <Users size={20} />, label: 'Students', roles: ['admin'] },
+        { to: '/subjects', icon: <BookOpen size={20} />, label: 'Subjects', roles: ['admin'] },
+        { to: '/reports', icon: <FileBarChart size={20} />, label: 'Reports', roles: ['admin'] },
+        { to: '/data', icon: <Database size={20} />, label: 'Data Management', roles: ['admin'] },
+        { to: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics', roles: ['admin'] },
+      ];
+    } else if (user?.role === 'principal') {
+      return [
+        ...baseItems,
+        { to: '/class-management', icon: <GraduationCap size={20} />, label: 'Class Management', roles: ['principal'] },
+        { to: '/teachers', icon: <UserCog size={20} />, label: 'Teachers', roles: ['principal'] },
+        { to: '/students', icon: <Users size={20} />, label: 'Students', roles: ['principal'] },
+        { to: '/reports', icon: <FileBarChart size={20} />, label: 'Reports', roles: ['principal'] },
+        { to: '/analytics', icon: <BarChart3 size={20} />, label: 'Analytics', roles: ['principal'] },
+      ];
+    } else if (user?.role === 'teacher') {
+      return [
+        ...baseItems,
+        { to: '/teacher-dashboard', icon: <GraduationCap size={20} />, label: 'My Classes', roles: ['teacher'] },
+        { to: '/students', icon: <Users size={20} />, label: 'Students', roles: ['teacher'] },
+      ];
+    }
+
+    return baseItems;
+  };
+
+  const navigationItems = getNavigationItems();
+
   return (
     <>
       {/* Mobile backdrop */}
@@ -79,14 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
           
           {/* Navigation */}
           <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-            <NavItem to="/" icon={<LayoutDashboard size={20} />} label="Dashboard" />
-            <NavItem to="/schools" icon={<School size={20} />} label="Schools" />
-            <NavItem to="/teachers" icon={<UserCog size={20} />} label="Teachers" />
-            <NavItem to="/students" icon={<Users size={20} />} label="Students" />
-            <NavItem to="/subjects" icon={<BookOpen size={20} />} label="Subjects" />
-            <NavItem to="/reports" icon={<FileBarChart size={20} />} label="Reports" />
-            <NavItem to="/data" icon={<Database size={20} />} label="Data Management" />
-            <NavItem to="/analytics" icon={<BarChart3 size={20} />} label="Analytics" />
+            {navigationItems.map((item) => (
+              <NavItem key={item.to} to={item.to} icon={item.icon} label={item.label} />
+            ))}
             
             <div className="pt-4 mt-4 border-t border-gray-200">
               <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
