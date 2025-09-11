@@ -6,10 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from src.config import Config
 
 #Importing all models 
-from .models import(
-    District, School, SchoolClass, Teacher, Student, Subject,
-    TeacherAssignment, StudentSubject, Marks, Attendance   
-)
+from src.models import *
 
 async_engine = AsyncEngine(
     create_engine(
