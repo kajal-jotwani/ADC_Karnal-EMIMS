@@ -4,6 +4,7 @@ Handles password hashing, JWT tokens, and security validations
 """
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Dict, Any
+import uuid
 import jwt
 from passlib.context import CryptContext
 from passlib.hash import bcrypt
@@ -41,7 +42,12 @@ class SecurityManager:
         else:
             expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
-        to_encode.update({"exp": expire, "type": "access"})
+        to_encode.update({
+            "exp": expire,
+            "iat": datetime.now(timezone.utc),
+            "type": "access",
+            "jti": str(uuid.uuid4())
+        })
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
@@ -55,7 +61,11 @@ class SecurityManager:
         else:
             expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-        to_encode.update({"exp": expire, "type": "refresh"})
+        to_encode.update({
+            "exp": expire,
+            "type": "refresh",
+            "jti": str(uuid.uuid4())
+        })
         encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
         return encoded_jwt
 
@@ -70,6 +80,13 @@ class SecurityManager:
                 raise HTTPException(
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail=f"Invalid {token_type} token",
+                )
+            
+            #ensure jti exists
+            if "jti" not in payload:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token structure",
                 )
             
             return payload
