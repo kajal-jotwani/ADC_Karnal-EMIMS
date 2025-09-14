@@ -17,6 +17,9 @@ class RefreshToken(BaseModel, table=True):
     expires_at: datetime = Field(nullable=False)
     is_revoked: bool = Field(default=False)
 
+    #jti for token identification
+    jti: str = Field(nullable=False, index=True)
+
     # Device/session tracking
     device_info: Optional[str] = None
     ip_address: Optional[str] = None
