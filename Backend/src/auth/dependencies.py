@@ -1,0 +1,96 @@
+"""
+Authentication dependencies.
+Provides dependency injections for auth
+"""
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlmodel import Session, select
+from typing import Optional
+import uuid
+
+from src.models.user import User
+from src.models.base import Role
+from src.db.main import get_session
+from .security import security
+from .models import RefreshToken
+
+#security scheme for JWT tokens
+security_scheme = HTTPBearer()
+
+async def get_current_user(
+        credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
+        session: AsyncSession = Depends(get_session)
+    ) -> User:
+    """Dependency to get the current authenticated user from JWT token"""
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"},     
+    )
+
+    try:
+
+        #verify the access token
+        payload = security.verify_token(credentials.credentials, token_type="access")
+        user_id_str: str = payload.get("sub")
+        jti: str = payload.get("jti")
+
+        if user_id_str is None or jti is None:
+            raise credentials_exception
+        
+        user_id = uuid.UUID(user_id_str)
+
+    except(HTTPException, ValueError):
+        raise credentials_exception
+    
+    #fetch the user from the database
+    user = await session.get(User, user_id)
+    if user is None:
+        raise credentials_exception
+    
+    if not user.is_active or user.is_deleted:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
+    
+    return user
+
+async def get_current_active_user(
+        current_user: User = Depends(get_current_user)
+    ) -> User:
+
+    """Dependency to get current active user"""
+
+    if not current_user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Inactive user",
+        )
+    return current_user
+
+def require_roles(*allowed_roles: Role):
+
+    """
+    Dependency to enforce role-based access control
+    Usage: @app.get("/admin", dependencies=[Depends(require_roles(Role.DISTRICT_ADMIN))])
+    """
+    async def role_checker(current_user: User = Depends(get_current_active_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Operation requires one of these roles: {', '.join([role.value for role in allowed_roles])}"
+            )
+        return current_user
+    
+    return role_checker
+
+#specific role dependencies
+require_district_admin = require_roles(Role.DISTRICT_ADMIN)
+require_principal = require_roles(Role.PRINCIPAL)
+require_teacher = require_roles(Role.TEACHER)
+require_admin_or_principal = require_roles(Role.DISTRICT_ADMIN, Role.PRINCIPAL)
+
