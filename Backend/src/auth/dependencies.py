@@ -94,3 +94,57 @@ require_principal = require_roles(Role.PRINCIPAL)
 require_teacher = require_roles(Role.TEACHER)
 require_admin_or_principal = require_roles(Role.DISTRICT_ADMIN, Role.PRINCIPAL)
 
+async def verify_refresh_token(
+        refresh_token: str,
+        session: AsyncSession = Depends(get_session)
+    ) -> User:
+
+    """verify the refresh token and return the associated user"""
+    try:
+        #verify token signature and expiry
+        payload = security.verify_token(refresh_token, "refresh")
+        user_id_str: str = payload.get("sub")
+        jti: str = payload.get("jti")
+
+        if user_id_str is None or jti is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",    
+            )
+        
+        user_id = uuid.UUID(user_id_str)
+
+        #check if refresh token exists in DB and is not revoked
+        result = await session.exec(
+            select(RefreshToken)
+            .where(RefreshToken.token == refresh_token)
+            .where(RefreshToken.jti == jti)
+            .where(RefreshToken.is_revoked == False)
+        )
+        db_token = result.first()
+
+        if not db_token:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid refresh token",    
+            )
+        
+        #get assosiated user
+        user = await session.get(User, user_id)
+        if user is None or not user.is_active or user.is_deleted:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate credentials",    
+            )
+        return user
+    
+    except HTTPException:
+        raise
+    except (ValueError, Exception):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",    
+        )
+    
+
+
