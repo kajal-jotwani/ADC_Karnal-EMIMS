@@ -3,7 +3,7 @@ Authentication service layer
 Contain logic for user authentication and token management
 """
 
-from fastapi import HTTPException, status
+from fastapi import Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from datetime import datetime, timedelta, timezone
@@ -256,5 +256,54 @@ class AuthService:
             created_at=user.created_at,
             last_login=user.last_login
         )
+
+    async def get_user_by_id(self, user_id: uuid.UUID) -> Optional[UserResponse]:
+        """Get user by ID"""
+
+        user = await self.session.get(User, user_id)
+        if not user or user.is_deleted:
+            return None
+        
+        return UserResponse(
+            id=user.id,
+            email=user.email,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            contact_number=user.contact_number,
+            role=user.role,
+            is_active=user.is_active,
+            is_verified=user.is_verified,
+            created_at=user.created_at,
+            last_login=user.last_login
+        )
+
+    async def change_password(self, user: User, current_password: str, new_password: str) -> bool:
+        """Change user's password"""
+        
+        #verify current password
+        if not security.verify_password(current_password, user.hashed_password):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect"
+            )
+        
+        #validate new password strength
+        if not security.validate_password_strength(new_password):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password does not meet strength requirements."
+            )
+        
+        #update password
+        user.hashed_password = security.get_password_hash(new_password)
+        user.updated_at = datetime.now(timezone.utc)
+        self.session.add(user)
+        await self.session.commit()
+
+        return True
+
+    async def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
+        """Dependency to get AuthService with session"""
+        return AuthService(session)
 
     
