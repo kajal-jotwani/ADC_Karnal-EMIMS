@@ -42,13 +42,13 @@ class SecurityManager:
         to_encode = data.copy()
 
         if expires_delta:
-            expire = datetime.now(timezone.utc) + expires_delta
+            expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+            expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
         to_encode.update({
             "exp": expire,
-            "iat": datetime.now(timezone.utc),
+            "iat": datetime.utcnow(),
             "type": "access",
             "jti": str(uuid.uuid4())
         })
@@ -61,9 +61,9 @@ class SecurityManager:
         to_encode = data.copy()
 
         if expires_delta:
-            expire = datetime.now(timezone.utc) + expires_delta
+            expire = datetime.utcnow() + expires_delta
         else:
-            expire = datetime.now(timezone.utc) + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
+            expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
         to_encode.update({
             "exp": expire,

@@ -41,52 +41,69 @@ class AuthService:
 
     async def create_user_tokens(self, user: User, device_info: Optional[str] = None, ip_address: Optional[str] = None) -> TokenResponse:
         """Create access and refresh tokens for a user"""
+    
+        try:
+            # Create access token
+            access_token_data = {
+                "sub": str(user.id),
+                "email": user.email,
+                "role": user.role.value,
+                "first_name": user.first_name,
+                "last_name": user.last_name
+            }
 
-        #create access token
-        access_token_data = {
-            "sub": str(user.id),
-            "email": user.email,
-            "role": user.role.value,
-            "first_name": user.first_name,
-            "last_name": user.last_name
-        }
+            access_token = security.create_access_token(access_token_data)
 
-        access_token = security.create_access_token(access_token_data)
+            # Create refresh token
+            refresh_token_data = {
+                "sub": str(user.id)
+            }
+            refresh_token = security.create_refresh_token(refresh_token_data)
 
-        #create refresh token
-        refresh_token_data = {
-            "sub": str(user.id)
-        }
-        refresh_token = security.create_refresh_token(refresh_token_data)
+        # Extract jti from refresh token to store in db
+            refresh_payload = security.verify_token(refresh_token, "refresh")
+            jti = refresh_payload.get("jti")
 
-        #extract jti from refresh token to store in db
-        refresh_payload = security.verify_token(refresh_token, "refresh")
-        jti = refresh_payload.get("jti")
+        # Validate jti exists
+            if not jti:
+                raise ValueError("Failed to extract JTI from refresh token")
 
-        #store refresh token in db
-        db_refresh_token = RefreshToken(
-            token=refresh_token,
-            jti=jti,
-            user_id=user.id,
-            expires_at=datetime.now(timezone.utc) + timedelta(days=Config.REFRESH_TOKEN_EXPIRE_DAYS),
-            device_info=device_info,
-            ip_address=ip_address
-        )
+        # Store refresh token in db
+            db_refresh_token = RefreshToken(
+                token=refresh_token,
+                jti=jti,
+                user_id=user.id,
+                expires_at=datetime.utcnow() + timedelta(days=Config.REFRESH_TOKEN_EXPIRE_DAYS),
+                device_info=device_info,
+                ip_address=ip_address
+            )
 
-        self.session.add(db_refresh_token)
+            self.session.add(db_refresh_token)
 
-        #update user's last login
-        user.last_login = datetime.now(timezone.utc)
-        user.updated_at = datetime.now(timezone.utc)
-        self.session.add(user)
-        await self.session.commit()
+            # Update user's last login
+            user.last_login = datetime.utcnow()
+            user.updated_at = datetime.utcnow()
+            self.session.add(user)
+        
+        # Commit the transaction
+            await self.session.commit()
 
-        return TokenResponse(
-            access_token=access_token,
-            refresh_token=refresh_token,
-            token_type="Bearer",
-            expires_in=Config.ACCESS_TOKEN_EXPIRE_MINUTES * 60
-        )
+            return TokenResponse(
+                access_token=access_token,
+                refresh_token=refresh_token,
+                token_type="Bearer",
+                expires_in=Config.ACCESS_TOKEN_EXPIRE_MINUTES * 60
+            )
+        
+        except Exception as e:
+            # Rollback on any error
+            await self.session.rollback()
+            # Log the actual error for debugging
+            print(f"Token creation error: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to create authentication tokens"
+            )
     
     async def login(self, login_data: UserLogin, device_info: Optional[str] = None, ip_address: Optional[str] = None) -> LoginResponse:
         """Handle user login"""
@@ -325,7 +342,7 @@ class AuthService:
         
         #update password
         user.hashed_password = security.get_password_hash(new_password)
-        user.updated_at = datetime.now(timezone.utc)
+        user.updated_at = datetime.utcnow()
         self.session.add(user)
         await self.session.commit()
 
