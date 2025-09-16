@@ -26,7 +26,11 @@ class SecurityManager:
     def hash_password(password: str) -> str:
         """Hash a plaintext password using bcrypt"""
         return pwd_context.hash(password)
-
+    
+    @staticmethod
+    def get_password_hash(password: str) -> str:
+        return pwd_context.hash(password)
+    
     @staticmethod
     def verify_password(plain_password: str, hashed_password: str) -> bool:
         """Verify a plaintext password against the hashed version"""

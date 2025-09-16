@@ -8,12 +8,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-import uuid
+import traceback
 
-from src.models.user import User
-from src.models.base import Role
 from .models import (
-    RefreshToken, UserLogin, UserCreate, UserResponse,
+    User, UserRole, RefreshToken, UserLogin, UserCreate, UserResponse,
     TokenResponse, LoginResponse
 )
 from .security import security
@@ -36,7 +34,7 @@ class AuthService:
         if not user or not security.verify_password(password, user.hashed_password):
             return None
         
-        if not user.is_active or user.is_deleted:
+        if not user.is_active:
             return None
         
         return user
@@ -104,6 +102,11 @@ class AuthService:
         #create token 
         tokens = await self.create_user_tokens(user, device_info, ip_address)
 
+        #get school name if exists
+        school_name = None
+        if user.school:
+            school_name = user.school.name
+
         #create user response 
         user_response = UserResponse(
             id=user.id,
@@ -112,10 +115,12 @@ class AuthService:
             last_name=user.last_name,
             contact_number=user.contact_number,
             role=user.role,
-            is_active=user.is_active,
-            is_verified=user.is_verified,
+            status=user.status,
+            school_id=user.school_id,
+            school_name=school_name,
             created_at=user.created_at,
-            last_login=user.last_login
+            last_login=user.last_login,
+            is_verified=user.is_verified
         )
 
         return LoginResponse(user=user_response, tokens=tokens)
@@ -134,7 +139,7 @@ class AuthService:
                     status_code=status.HTTP_401_UNAUTHORIZED,
                     detail="Invalid refresh token"
                 )
-            user_id = uuid.UUID(user_id_str)
+            user_id = int(user_id_str)
         except(HTTPException, ValueError):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -206,8 +211,8 @@ class AuthService:
     
     async def create_user(self, user_data: UserCreate) -> UserResponse:
         """Create a new user"""
-        
-        #check if user alredy exists by email or contact number
+    
+        # check if user already exists
         result = await self.session.exec(
             select(User).where(
                 (User.email == user_data.email.lower()) | 
@@ -221,15 +226,15 @@ class AuthService:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="User with given email or contact number already exists"
             )
-        
-        #validate password strength
+    
+        # validate password strength
         if not security.validate_password_strength(user_data.password):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Password does not meet strength requirements."
             )
-        
-        #create user 
+    
+        # create user object
         hashed_password = security.get_password_hash(user_data.password)
         user = User(
             email=user_data.email.lower(),
@@ -237,33 +242,55 @@ class AuthService:
             last_name=user_data.last_name,
             contact_number=user_data.contact_number,
             hashed_password=hashed_password,
-            role=user_data.role
+            role=user_data.role,
+            school_id=user_data.school_id
         )
 
-        self.session.add(user)
-        await self.session.commit()
-        await self.session.refresh(user)
+        try:
+            self.session.add(user)
+            await self.session.commit()
+            await self.session.refresh(user)
+            school_name = None
+            if user.school:
+                school_name = user.school.name
 
-        return UserResponse(
-            id=user.id,
-            email=user.email,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            contact_number=user.contact_number,
-            role=user.role,
-            is_active=user.is_active,
-            is_verified=user.is_verified,
-            created_at=user.created_at,
-            last_login=user.last_login
+            return UserResponse(
+                id=user.id,
+                email=user.email,
+                first_name=user.first_name,
+                last_name=user.last_name,
+                contact_number=user.contact_number,
+                role=user.role,
+                status=user.status,
+                school_id=user.school_id,
+                school_name=school_name,
+                created_at=user.created_at,
+                last_login=user.last_login,
+                is_verified=user.is_verified
+            )
+
+        except Exception as e:
+            await self.session.rollback()
+            error_trace = traceback.format_exc()
+            print("❌ DB Commit Error:", str(e))
+            print("🔍 Traceback:\n", error_trace)   # <-- this shows exactly what failed
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Database error: {str(e)}"
         )
 
-    async def get_user_by_id(self, user_id: uuid.UUID) -> Optional[UserResponse]:
+
+    async def get_user_by_id(self, user_id: int) -> Optional[UserResponse]:
         """Get user by ID"""
 
         user = await self.session.get(User, user_id)
         if not user or user.is_deleted:
             return None
         
+        school_name = None
+        if user.school:
+            school_name = user.school.name
+
         return UserResponse(
             id=user.id,
             email=user.email,
@@ -271,10 +298,12 @@ class AuthService:
             last_name=user.last_name,
             contact_number=user.contact_number,
             role=user.role,
-            is_active=user.is_active,
-            is_verified=user.is_verified,
+            status=user.status,
+            school_id=user.school_id,
+            school_name=school_name,
             created_at=user.created_at,
-            last_login=user.last_login
+            last_login=user.last_login,
+            is_verified=user.is_verified
         )
 
     async def change_password(self, user: User, current_password: str, new_password: str) -> bool:
@@ -302,8 +331,8 @@ class AuthService:
 
         return True
 
-    async def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
-        """Dependency to get AuthService with session"""
-        return AuthService(session)
+async def get_auth_service(session: AsyncSession = Depends(get_session)) -> AuthService:
+    """Dependency to get AuthService with session"""
+    return AuthService(session)
 
     
