@@ -22,4 +22,12 @@ app = FastAPI(
 
 register_middleware(app)
 
+@app.get("/")
+async def root():
+    return {"message": "Welcome to the Education Management system backend"}
+
+@app.get("/api/v1/health")
+async def health_check():
+    return {"status": "Healthy", "message": "Backend is running 🚀"}
+
 app.include_router(auth_router, prefix=f"/api/{version}/auth", tags=["auth"])
