@@ -6,8 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from src.config import Config
 
 #Importing all models 
-from src.models import *
-from src.auth.models import RefreshToken
+from src.models import *  
+from src.auth.models import *  
 
 async_engine = AsyncEngine(
     create_engine(
