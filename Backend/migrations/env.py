@@ -22,13 +22,14 @@ config.set_main_option('sqlalchemy.url', database_url)
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-from src.models import BaseModel
+from src.models import models
+from src.auth import models
 
 # add your model's MetaData object here
 # for 'autogenerate' support
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
-target_metadata = BaseModel.metadata
+target_metadata = SQLModel.metadata
 
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
