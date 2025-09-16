@@ -1,24 +1,28 @@
-from __future__ import annotations
-from .base import BaseModel, Role, AttendanceStatus
-from .user import User
-from .district import District, DistrictAdmin
-from .school import School, Principal, Teacher
-from .classroom import Class, Student, Subject
-from .records import Attendance, Exam, ExamMarks
+from .models import (
+    District,
+    School,
+    Class,
+    Teacher,
+    Subject,
+    TeacherAssignment,
+    Student,
+    StudentSubject,
+    Marks,
+    Attendance,
+    Exam,
+    ExamMarks
+)
 
 __all__ = [
-    "BaseModel",
-    "Role",
-    "AttendanceStatus",
-    "User",
     "District",
-    "DistrictAdmin",
     "School",
-    "Principal",
-    "Teacher",
     "Class",
-    "Student",
+    "Teacher",
     "Subject",
+    "TeacherAssignment",
+    "Student",
+    "StudentSubject",
+    "Marks",
     "Attendance",
     "Exam",
     "ExamMarks",
