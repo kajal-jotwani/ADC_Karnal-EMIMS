@@ -29,18 +29,18 @@ api.interceptors.request.use((config) => {
 // Auth service 
 
 export const login = async (
-    Credentials: LoginCredentials
+    credentials: LoginCredentials
 ): Promise<LoginResponse> => {
-    const { data } = await api.post<LoginResponse>("/auth/login", Credentials);
+    const { data } = await api.post<LoginResponse>("/auth/login", credentials);
 
-localStorage.setItem("access_token", DataTransfer.tokens.access_token)
-localStorage.setItem("refersh_token", DataTransfer.tokens.refersh_token)
-localStorage.setItem("auth_token", DataTransfer.tokens.auth_token)
+    localStorage.setItem("access_token", data.tokens.accessToken);
+    localStorage.setItem("refresh_token", data.tokens.refreshToken);
+    localStorage.setItem("auth_user", JSON.stringify(data.user));
 
-return data;
+    return data;
 };
 
-export const refershAccessToken = async():
+export const refreshAccessToken = async():
 Promise<TokenResponse | null> =>{
     const refreshToken = localStorage.getItem("refresh_token");
     if(!refreshToken) return null;
@@ -82,7 +82,7 @@ Promise<User | null> =>{
         return data;
     }catch (error: any){
         if(error.response?.status === 401){
-            const newTokens = await refershAccessToken();
+            const newTokens = await refreshAccessToken();
             if(newTokens){
                 const {data: retryData} = await api.get<User>("/auth/me", {
                     headers:{
