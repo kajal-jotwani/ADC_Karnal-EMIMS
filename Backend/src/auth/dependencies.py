@@ -10,11 +10,10 @@ from sqlmodel import Session, select
 from typing import Optional
 import uuid
 
-from src.models.user import User
-from src.models.base import Role
+from .models import User, UserRole, RefreshToken
 from src.db.main import get_session
 from .security import security
-from .models import RefreshToken
+
 
 #security scheme for JWT tokens
 security_scheme = HTTPBearer()
@@ -51,7 +50,7 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
     
-    if not user.is_active or user.is_deleted:
+    if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user",
@@ -72,7 +71,7 @@ async def get_current_active_user(
         )
     return current_user
 
-def require_roles(*allowed_roles: Role):
+def require_roles(*allowed_roles: UserRole):
 
     """
     Dependency to enforce role-based access control
@@ -89,10 +88,10 @@ def require_roles(*allowed_roles: Role):
     return role_checker
 
 #specific role dependencies
-require_district_admin = require_roles(Role.DISTRICT_ADMIN)
-require_principal = require_roles(Role.PRINCIPAL)
-require_teacher = require_roles(Role.TEACHER)
-require_admin_or_principal = require_roles(Role.DISTRICT_ADMIN, Role.PRINCIPAL)
+require_admin = require_roles(UserRole.ADMIN)
+require_principal = require_roles(UserRole.PRINCIPAL)
+require_teacher = require_roles(UserRole.TEACHER)
+require_admin_or_principal = require_roles(UserRole.ADMIN, UserRole.PRINCIPAL)
 
 async def verify_refresh_token(
         refresh_token: str,
@@ -112,7 +111,7 @@ async def verify_refresh_token(
                 detail="Could not validate credentials",    
             )
         
-        user_id = uuid.UUID(user_id_str)
+        user_id = int(user_id_str)
 
         #check if refresh token exists in DB and is not revoked
         result = await session.exec(

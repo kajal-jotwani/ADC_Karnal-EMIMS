@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Optional
 from src.db.main import get_session
 from .dependencies import get_current_active_user, security_scheme
-from src.models import User
+from .models import User
 from .services import AuthService, get_auth_service
 
 from .models import(
@@ -71,11 +71,15 @@ async def logout(
 
 @auth_router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
-    current_user: User = Depends(get_current_active_user)  # Changed from UserResponse to User
+    current_user: User = Depends(get_current_active_user) 
 ):
     """
     Get current user information
     """
+    school_name = None
+    if current_user.school and hasattr(current_user.school, 'name'):
+        school_name = current_user.school.name
+
     # Convert User model to UserResponse
     return UserResponse(
         id=current_user.id,
@@ -84,23 +88,25 @@ async def get_current_user_info(
         last_name=current_user.last_name,
         contact_number=current_user.contact_number,
         role=current_user.role,
-        is_active=current_user.is_active,
-        is_verified=current_user.is_verified,
+        status=current_user.status,
+        school_id=current_user.school_id,
+        school_name=school_name,
         created_at=current_user.created_at,
-        last_login=current_user.last_login
+        last_login=current_user.last_login,
+        is_verified=current_user.is_verified
     )
 
 @auth_router.post("/change-password")
 async def change_password(
     password_data: ChangePasswordRequest,
-    current_user: User = Depends(get_current_active_user),  # Changed from UserResponse to User
+    current_user: User = Depends(get_current_active_user),  
     auth_service: AuthService = Depends(get_auth_service)
 ):
     """
     Change user password
     """
     success = await auth_service.change_password(
-        current_user,  # Pass the User object directly
+        current_user, 
         password_data.current_password, 
         password_data.new_password
     )
@@ -116,11 +122,12 @@ async def change_password(
 @auth_router.get("/verify-token")
 async def verify_token(
     credentials: HTTPAuthorizationCredentials = Depends(security_scheme),
-    current_user: User = Depends(get_current_active_user)  # Changed from UserResponse to User
+    current_user: User = Depends(get_current_active_user)  
 ):
     """
     Verify if the current token is valid
     """
+
     # Convert User model to UserResponse for the response
     user_response = UserResponse(
         id=current_user.id,
@@ -129,10 +136,12 @@ async def verify_token(
         last_name=current_user.last_name,
         contact_number=current_user.contact_number,
         role=current_user.role,
-        is_active=current_user.is_active,
-        is_verified=current_user.is_verified,
+        status=current_user.status,
+        school_id=current_user.school_id,
+        school_name=current_user.school,
         created_at=current_user.created_at,
-        last_login=current_user.last_login
+        last_login=current_user.last_login,
+        is_verified=current_user.is_verified
     )
     
     return {
@@ -141,3 +150,21 @@ async def verify_token(
         "message": "Token is valid"
     }
 
+@auth_router.post("/refresh", response_model=TokenResponse)
+async def refresh_token(
+    refresh_data: RefreshTokenRequest,
+    auth_service: AuthService = Depends(get_auth_service)
+):
+    """
+    Refresh access token using refresh token
+    """
+    try:
+        new_tokens = await auth_service.refresh_token(refresh_data.refresh_token)
+        return new_tokens
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Token refresh failed"
+        )
