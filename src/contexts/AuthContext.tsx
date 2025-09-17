@@ -1,86 +1,80 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { User, AuthState } from "../types/auth";
+import {
+  login as apiLogin,
+  logout as apiLogout,
+  getCurrentUser,
+} from "../services/auth"
 
-export type UserRole = 'principal' | 'teacher' | 'admin';
-
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  schoolId?: string;
-  schoolName?: string;
-}
-
-interface AuthContextType {
-  user: User | null;
+//extending state with login logout actions
+interface AuthContextType extends AuthState {
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
-  switchRole: (role: UserRole) => void;
+  logout: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const mockUsers: User[] = [
-  {
-    id: '1',
-    name: 'Dr. Sarah Johnson',
-    email: 'principal@lincoln.edu',
-    role: 'principal',
-    schoolId: '1',
-    schoolName: 'Lincoln High School'
-  },
-  {
-    id: '2',
-    name: 'Jane Smith',
-    email: 'jane.smith@lincoln.edu',
-    role: 'teacher',
-    schoolId: '1',
-    schoolName: 'Lincoln High School'
-  },
-  {
-    id: '3',
-    name: 'Admin User',
-    email: 'admin@district.edu',
-    role: 'admin'
-  }
-];
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(mockUsers[2]); // Default to admin for demo
+  const [authState, setAuthState] = useState<AuthState>({
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
+  });
 
-  const login = async (email: string, password: string): Promise<boolean> => {
-    // Mock login - in real app, this would call an API
-    const foundUser = mockUsers.find(u => u.email === email);
-    if (foundUser) {
-      setUser(foundUser);
-      return true;
+  //Rehydrate user from backend when app mounts
+  useEffect(() => {
+    const initializedAuth = async () => {
+      try{
+        const user = await getCurrentUser();
+        if(user){
+          setAuthState({user, isAuthenticated: true, isLoading: false});
+        }else{
+          setAuthState({user: null, isAuthenticated: false, isLoading: false});
+        }
+      }catch (err) {
+        console.error('Auth initialization error:', err);
+        setAuthState({user: null, isAuthenticated: false, isLoading: false});
+      }
+    };
+    initializedAuth();
+  }, []);
+
+  //Login
+  const login = async (email: string, password: string): Promise<boolean> =>{
+    setAuthState((prev) => ({...prev, isLoading: true}));
+    try{
+      const response = await apiLogin({email, password})
+      const user = response.user
+      if(user) {
+        setAuthState({ user, isAuthenticated: true, isLoading: false });
+        return true;
+      }
+      setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+      return false;
+    }catch (err){
+      console.error('Login error:', err);
+      setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+      return false;
     }
-    return false;
   };
 
-  const logout = () => {
-    setUser(null);
-  };
-
-  const switchRole = (role: UserRole) => {
-    const roleUser = mockUsers.find(u => u.role === role);
-    if (roleUser) {
-      setUser(roleUser);
+  //logout 
+  const logout = async() => {
+    setAuthState((prev) => ({...prev, isLoading: true}));
+    try {
+      await apiLogout();
+    }catch(err) {
+      console.error('Logout error:', err);
+    }finally{
+      setAuthState({user: null, isAuthenticated: false, isLoading: false})
     }
-  };
-
+  }
   return (
-    <AuthContext.Provider value={{
-      user,
-      login,
-      logout,
-      switchRole,
-    }}>
+    <AuthContext.Provider value={{...authState, login, logout}}>
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
