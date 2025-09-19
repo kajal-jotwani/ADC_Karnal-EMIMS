@@ -6,6 +6,7 @@ Contain logic for user authentication and token management
 from fastapi import Depends, HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 import traceback
@@ -27,7 +28,7 @@ class AuthService:
         """Authenticate user by email and password"""
 
         result = await self.session.exec(
-            select(User).where(User.email == email.lower())
+            select(User).options(selectinload(User.school)).where(User.email == email.lower())
         )
         user = result.first()
 
@@ -122,7 +123,7 @@ class AuthService:
         #get school name if exists
         school_name = None
         if user.school:
-            school_name = user.school.name
+            school_name = user.school.name if user.school else None
 
         #create user response 
         user_response = UserResponse(
