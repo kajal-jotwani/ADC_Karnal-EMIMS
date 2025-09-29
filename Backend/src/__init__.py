@@ -3,6 +3,7 @@ from src.db.main import init_db
 from contextlib import asynccontextmanager
 from src.auth.routes import auth_router 
 from .middleware import register_middleware
+from src.routers import dashboard
 
 @asynccontextmanager
 async def life_span(app: FastAPI):
@@ -31,3 +32,4 @@ async def health_check():
     return {"status": "Healthy", "message": "Backend is running 🚀"}
 
 app.include_router(auth_router, prefix=f"/api/{version}/auth", tags=["auth"])
+app.include_router(dashboard.router, prefix=f"/api/{version}/routers/dashboard", tags=["dashboard"])
