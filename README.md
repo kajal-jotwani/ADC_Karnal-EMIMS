@@ -67,7 +67,7 @@ The system is designed with role-based access control (RBAC). Each role has spec
 - Track student-level performance and progress.
 - Upload and manage class timetables & schedules.
 
-## Quick Start 
+## Installation Guide
 
 #### 🔧 Prerequisites
 - Node.js >= 18
@@ -132,7 +132,7 @@ fastapi run src
 💡 Tip: Both commands start the server with hot reload. Use FastAPI CLI if installed for convenience.
 
 
-## 🎨 Frontend Setup
+## Frontend Setup
 Follow these steps to set up the frontend locally. By default, the React frontend runs on ```localhost:5173``` (Vite dev server) and communicates with the FastAPI backend on ```localhost:8000```.
 
 1. **Install dependencies**
@@ -146,5 +146,42 @@ npm run dev
 ```
 
 ## High level repository structure
-This repository contains both frontend and backend code for the ADC Karnal Education Management System. Below is a high-level overview of the folder and file structure:
+This repository contains both frontend and backend code for the Education Management System for Karnal. Below is a high-level overview of the folder and file structure:
 
+```
+ADC_KARNAL_EMIMS/
+├── backend/ # FastAPI + SQLModel backend code
+│ ├── src/ # Application source code
+│ ├── alembic/ # Database migrations
+│ ├── requirements.txt # Python dependencies
+│ └── .env.example # Example environment variables
+| └── README.md  #APIs, models, migrations, and coding standards.
+│
+├── frontend/ # React (Vite) frontend code (lives at root level)
+│ ├── src/ # React components, pages & utilities
+│ ├── public/ # Static assets
+│ ├── package.json # Frontend dependencies
+│ └── vite.config.ts # Vite configuration
+│ └── README.md #components, styling conventions, and dev workflow.
+│
+├── docs/ # Technical documentation & handover files
+├── README.md # Main project overview & setup guide
+├── LICENSE # Project license file
+└── .gitignore # Git ignore rules
+```
+
+## 📖 Detailed Documentation
+
+This main README provides an overview. For detailed development and contribution guidelines, please check the specific READMEs:
+
+- [Backend README](./backend/README.md) – APIs, models, migrations, coding standards.  
+- [Frontend README](./frontend/README.md) – Components, styling conventions, developer workflow.  
+
+## Contributing
+We welcome contributions! Please follow these steps:
+
+1. Fork the repository.  
+2. Create a new feature branch (`git checkout -b feature/my-feature`).  
+3. Commit your changes (`git commit -m "Add new feature"`).  
+4. Push to your branch (`git push origin feature/my-feature`).  
+5. Open a Pull Request.  
