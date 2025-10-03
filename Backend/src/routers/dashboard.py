@@ -5,6 +5,7 @@ Provides aggregated data for dashboard views
 from fastapi import APIRouter, Depends
 from sqlalchemy import func, cast, Integer
 from sqlmodel import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Dict, Any, List
 from datetime import datetime, timedelta
 from src.db.main import get_session
@@ -17,7 +18,7 @@ router = APIRouter()
 @router.get("/stats")
 async def get_dashboard_stats(
     current_user: User = Depends(get_current_active_user),
-    session = Depends(get_session)
+    session: AsyncSession = Depends(get_session)
 ) -> Dict[str, Any]:
     """
     This endpoint gives dashboard stats based on user role
@@ -85,7 +86,7 @@ async def get_dashboard_stats(
                 select(TeacherAssignment.class_id)
                 .where(TeacherAssignment.teacher_id == teacher.id)
             )
-            class_ids = class_ids_res.all()
+            class_ids = [c[0] for c in class_ids_res.all()]  # unpack tuple results
 
             total_students_res = await session.exec(
                 select(func.count(Student.id))
@@ -104,11 +105,11 @@ async def get_dashboard_stats(
 
     return stats
 
-
+#currently hardcoaded will improve and replace later
 @router.get("/recent-activity")
 async def get_recent_activity(
     current_user: User = Depends(get_current_active_user),
-    session = Depends(get_session)
+    session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
     activities = []
 
@@ -136,7 +137,7 @@ async def get_recent_activity(
 @router.get("/performance-data")
 async def get_performance_data(
     current_user: User = Depends(get_current_active_user),
-    session = Depends(get_session)
+    session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
     subjects_res = await session.exec(select(Subject))
     subjects = subjects_res.all()
@@ -164,7 +165,7 @@ async def get_performance_data(
 @router.get("/alerts")
 async def get_alerts(
     current_user: User = Depends(get_current_active_user),
-    session = Depends(get_session)
+    session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
     alerts = []
 
@@ -226,7 +227,7 @@ async def get_alerts(
                     "id": f"attendance_class_{class_name}",
                     "type": "warning",
                     "message": f"Low attendance detected in class {class_name}",
-                    "time": "2 hours ago"
+                    "time": datetime.now().isoformat()
                 })
             
             # Low performance for classes (average marks < 50%)
