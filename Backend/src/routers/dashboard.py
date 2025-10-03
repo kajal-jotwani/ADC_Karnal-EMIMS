@@ -222,7 +222,7 @@ async def get_alerts(
                 "id": f"attendance_{school_name}",
                 "type": "warning",
                 "message": f"Low attendance detected at {school_name}",
-                "time": "2 hours ago"
+                "time": datetime.now().isoformat()
             })
 
         # Low performance of schools in terms of results (average marks < 50% can be changed later)
@@ -240,7 +240,7 @@ async def get_alerts(
                 "id": f"performance_{school_name}",
                 "type": "warning",
                 "message": f"Low performance detected at {school_name}",
-                "time": "2 hours ago"
+                "time": datetime.now().isoformat()
             })
 
     #Principal alerts 
