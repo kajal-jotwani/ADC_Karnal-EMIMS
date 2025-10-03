@@ -244,7 +244,7 @@ async def get_alerts(
                     "id": f"performance_class_{class_name}",
                     "type": "warning",
                     "message": f"Low performance detected in class {class_name}",
-                    "time": "2 hours ago"
+                    "time": datetime.now().isoformat()
                 })
     # Teacher Alerts
     if current_user.role == UserRole.TEACHER:
@@ -270,7 +270,7 @@ async def get_alerts(
                     "id": f"attendance_student_{student_name}",
                     "type": "warning",
                     "message": f"Low attendance detected for student {student_name}",
-                    "time": "2 hours ago"
+                    "time": datetime.now().isoformat()
                 })
 
             # Check student's performance
@@ -288,7 +288,7 @@ async def get_alerts(
                     "id": f"performance_student_{student_name}",
                     "type": "warning",
                     "message": f"Declining performance detected for student {student_name}",
-                    "time": "2 hours ago"
+                    "time": datetime.now().isoformat()
                 })
 
     return alerts
