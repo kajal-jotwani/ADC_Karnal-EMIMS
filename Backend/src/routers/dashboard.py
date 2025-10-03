@@ -169,13 +169,15 @@ async def get_alerts(
     alerts = []
 
     if current_user.role == UserRole.ADMIN:
+        #checks for low attendance for schools in last 7 days
         low_attendance_res = await session.exec(
             select(School.name)
             .join(Class, School.id == Class.school_id)
             .join(Attendance, Class.id == Attendance.class_id)
             .where(Attendance.attendance_date >= datetime.now().date() - timedelta(days=7))
             .group_by(School.id, School.name)
-            .having(func.avg(cast(Attendance.is_present, Integer)) < 0.85)
+            #if the attendance is less than 75% alert is sent -- can be changed according to schools attendance policy
+            .having(func.avg(cast(Attendance.is_present, Integer)) < 0.75)
         )
         low_attendance_schools = low_attendance_res.all()
 
@@ -187,10 +189,106 @@ async def get_alerts(
                 "time": "2 hours ago"
             })
 
+        # Low performance of schools in terms of results (average marks < 50% can be changed later)
+        low_performance_res = await session.exec(
+            select(School.name)
+            .join(Class, School.id == Class.school_id)
+            .join(Marks, Class.id == Marks.class_id)
+            .group_by(School.id, School.name)
+            .having(func.avg(Marks.marks)<50)
+        )
+        low_performance_schools = low_performance_res.all()
+
+        for school_name in low_performance_schools:
+            alerts.append({
+                "id": f"performance_{school_name}",
+                "type": "warning",
+                "message": f"Low performance detected at {school_name}",
+                "time": "2 hours ago"
+            })
+
+    #Principal alerts 
     if current_user.role == UserRole.PRINCIPAL:
-        alerts.extend([
-            {"id": "1", "type": "warning", "message": "Class 10A needs substitute teacher for Math", "time": "1 hour ago"},
-            {"id": "2", "type": "info", "message": "Parent-teacher meeting scheduled for next week", "time": "1 day ago"}
-        ])
+        if current_user.school_id:
+            #alerts for low attendance of classes in last 7 days
+            low_attendance_res = await session.exec(
+                select(Class.name)
+                .join(Attendance, Class.id == Attendance.class_id)
+                .where(Class.school_id == current_user.school_id)
+                .where(Attendance.attendance_date >= datetime.now().date() - timedelta(days=7))
+                .group_by(Class.id, Class.name)
+                .having(func.avg(cast(Attendance.is_present, Integer)) < 0.75)
+            )
+            low_attendance_classes = low_attendance_res.all()
+
+            for class_name in low_attendance_classes:
+                alerts.append({
+                    "id": f"attendance_class_{class_name}",
+                    "type": "warning",
+                    "message": f"Low attendance detected in class {class_name}",
+                    "time": "2 hours ago"
+                })
+            
+            # Low performance for classes (average marks < 50%)
+            low_performance_res = await session.exec(
+                select(Class.name)
+                .join(Marks, Class.id == Marks.class_id)
+                .where(Class.school_id == current_user.school_id)
+                .group_by(Class.id, Class.name)
+                .having(func.avg(Marks.marks) < 50)
+            )
+            low_performance_classes = low_performance_res.all()
+
+            for class_name in low_performance_classes:
+                alerts.append({
+                    "id": f"performance_class_{class_name}",
+                    "type": "warning",
+                    "message": f"Low performance detected in class {class_name}",
+                    "time": "2 hours ago"
+                })
+    # Teacher Alerts
+    if current_user.role == UserRole.TEACHER:
+        teacher_res = await session.exec(
+            select(Teacher).where(Teacher.email == current_user.email)
+        )
+        teacher = teacher_res.first()
+
+        if teacher:
+            # Check student's attendance
+            low_attendance_students_res = await session.exec(
+                select(Student.name)
+                .join(Attendance, Student.id == Attendance.student_id)
+                .where(Attendance.teacher_id == teacher.id)
+                .where(Attendance.attendance_date >= datetime.now().date() - timedelta(days=7))
+                .group_by(Student.id, Student.name)
+                .having(func.avg(cast(Attendance.is_present, Integer)) < 0.85)
+            )
+            low_attendance_students = low_attendance_students_res.all()
+
+            for student_name in low_attendance_students:
+                alerts.append({
+                    "id": f"attendance_student_{student_name}",
+                    "type": "warning",
+                    "message": f"Low attendance detected for student {student_name}",
+                    "time": "2 hours ago"
+                })
+
+            # Check student's performance
+            low_performance_students_res = await session.exec(
+                select(Student.name)
+                .join(Marks, Student.id == Marks.student_id)
+                .where(Marks.teacher_id == teacher.id)
+                .group_by(Student.id, Student.name)
+                .having(func.avg(Marks.marks) < 50)
+            )
+            low_performance_students = low_performance_students_res.all()
+
+            for student_name in low_performance_students:
+                alerts.append({
+                    "id": f"performance_student_{student_name}",
+                    "type": "warning",
+                    "message": f"Declining performance detected for student {student_name}",
+                    "time": "2 hours ago"
+                })
 
     return alerts
