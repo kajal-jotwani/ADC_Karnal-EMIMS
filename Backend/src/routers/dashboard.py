@@ -2,7 +2,7 @@
 Dahsboard API endpoints
 Provides aggregated data for dashboard views
 """
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import func, cast, Integer
 from sqlmodel import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -139,26 +139,61 @@ async def get_performance_data(
     current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
-    subjects_res = await session.exec(select(Subject))
-    subjects = subjects_res.all()
-    performance_data = []
+    
+    performance_data: List[Dict[str, Any]] = []
 
-    for subject in subjects:
-        avg_marks_res = await session.exec(
-            select(func.avg(Marks.marks))
-            .where(Marks.subject_id == subject.id)
+
+    if current_user.role == UserRole.ADMIN:
+        #if district admin show average marks per subject across all schools in the table
+        result = await session.exec(
+            select(Subject.name, func.avg(Marks.marks))
+            .join(Marks, Marks.subject_id == Subject.id)
+            .group_by(Subject.id, Subject.name)
         )
-        school_avg = round(avg_marks_res.one() or 0, 1)
-        district_avg = max(0, school_avg + ((-5 + (hash(subject.name) % 10)) * 0.5))
-        state_avg = max(0, district_avg + ((-3 + (hash(subject.name) % 6)) * 0.3))
+        for subject_name, avg_marks in result.all():
+            performance_data.append({
+                "subject": subject_name,
+                "average": round(avg_marks or 0, 1)
+            })
+    elif current_user.role == UserRole.PRINCIPAL:
+        if not current_user.school_id:
+            raise HTTPException(status_code=400, detail="Principal not linked to a school")
 
-        performance_data.append({
-            "subject": subject.name,
-            "average": school_avg,
-            "district": round(district_avg, 1),
-            "state": round(state_avg, 1)
-        })
+        results = await session.exec(
+            select(Subject.name, func.avg(Marks.marks))
+            .join(Marks, Marks.subject_id == Subject.id)
+            .join(Class, Marks.class_id == Class.id)
+            .where(Class.school_id == current_user.school_id)
+            .group_by(Subject.id, Subject.name)
+        )
+        for subject_name, avg_marks in results.all():
+            performance_data.append({
+                "subject": subject_name,
+                "average": round(avg_marks or 0, 1)
+            })
 
+    elif current_user.role == UserRole.TEACHER:
+        teacher_res = await session.exec(
+            select(Teacher).where(Teacher.email == current_user.email)
+        )
+        teacher = teacher_res.first()
+        if not teacher:
+            raise HTTPException(status_code=404, detail="Teacher not found")
+
+        from src.models import TeacherAssignment
+        assigned_subjects_res = await session.exec(
+            select(Subject.name, func.avg(Marks.marks))
+            .join(Marks, Marks.subject_id == Subject.id)
+            .join(TeacherAssignment, TeacherAssignment.subject_id == Subject.id)
+            .where(TeacherAssignment.teacher_id == teacher.id)
+            .group_by(Subject.id, Subject.name)
+        )
+
+        for subject_name, avg_marks in assigned_subjects_res.all():
+            performance_data.append({
+                "subject": subject_name,
+                "average": round(avg_marks or 0, 1)
+            })
     return performance_data
 
 
