@@ -40,7 +40,7 @@ async def get_current_user(
         if user_id_str is None or jti is None:
             raise credentials_exception
         
-        user_id = uuid.UUID(user_id_str)
+        user_id = int(user_id_str)
 
     except(HTTPException, ValueError):
         raise credentials_exception
