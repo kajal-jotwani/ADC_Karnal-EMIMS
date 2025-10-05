@@ -144,19 +144,6 @@ const LoginForm: React.FC = () => {
           </div>
         </form>
       </div>
-
-      {/* Background animation keyframes */}
-      <style>{`
-        @keyframes bgMove {
-          0% { background-position: 0 0; }
-          100% { background-position: 1000px 1000px; }
-        }
-        .animate-bgMove {
-          animation: bgMove 60s linear infinite;
-          background: rgba(255,255,255,0.2);
-          backdrop-filter: blur(5px);
-        }
-      `}</style>
     </div>
   );
 };
