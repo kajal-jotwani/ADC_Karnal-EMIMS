@@ -38,7 +38,7 @@ const LoginForm: React.FC = () => {
     <div
       className="min-h-screen flex items-center justify-center py-12 px-6 lg:px-8 bg-cover bg-center relative overflow-hidden"
       style={{
-        backgroundImage: `url('src/public/background.png')`,
+        backgroundImage: `url('/background.png')`,
       }}
     >
       {/* Login Card */}
@@ -47,7 +47,7 @@ const LoginForm: React.FC = () => {
         <div className="text-center">
           <div className="mx-auto h-20 w-20 flex items-center justify-center rounded-full bg-white shadow-md">
             <img
-              src="src/public/logo.png"
+              src="/logo.png"
               alt="Government of Haryana Logo"
               className="h-50 w-30 object-contain"
             />
