@@ -35,14 +35,24 @@ const LoginForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
+    <div
+      className="min-h-screen flex items-center justify-center py-12 px-6 lg:px-8 bg-cover bg-center relative overflow-hidden"
+      style={{
+        backgroundImage: `url('/background.png')`,
+      }}
+    >
+      {/* Login Card */}
+      <div className="relative z-10 max-w-md w-full bg-white/80 backdrop-blur-lg p-8 rounded-2xl shadow-2xl space-y-8 transition-transform duration-500 hover:scale-[1.01]">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-100">
-            <School className="h-8 w-8 text-primary-600" />
+          <div className="mx-auto h-20 w-20 flex items-center justify-center rounded-full bg-white shadow-md">
+            <img
+              src="/logo.png"
+              alt="Government of Haryana Logo"
+              className="h-50 w-30 object-contain"
+            />
           </div>
-          <h2 className="mt-6 text-3xl font-heading font-bold text-gray-900">
+          <h2 className="mt-4 text-2xl font-heading font-bold text-gray-900 leading-tight">
             Education Management System Karnal
           </h2>
           <p className="mt-2 text-sm text-gray-600">Sign in to your account</p>
@@ -124,7 +134,7 @@ const LoginForm: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300"
             >
               <span className="absolute left-0 inset-y-0 flex items-center pl-3">
                 <LogIn className="h-5 w-5 text-primary-500 group-hover:text-primary-400" />
