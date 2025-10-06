@@ -199,8 +199,8 @@ ADC_KARNAL_EMIMS/
 
 This main README provides an overview. For detailed development and contribution guidelines, please check the specific READMEs:
 
-- [Backend README](./backend/README.md) – APIs, models, migrations, coding standards.  
-- [Frontend README](./frontend/README.md) – Components, styling conventions, developer workflow.  
+- [Backend README](./Backend/README.md) – APIs, models, migrations, coding standards.  
+- [Frontend README](./src/README.md) – Components, styling conventions, developer workflow.  
 
 ## Contributing
 We welcome contributions! Please follow these steps:
