@@ -161,13 +161,13 @@ The API is organized into several modules, each handling a specific domain of th
 - `GET /exams/student/{student_id}/performance:` Get a student's performance summary.
 
 
-## Database Setup
+## 5. Database Setup
 - This app uses SQLAlchemy’s async engine and requires an async PostgreSQL driver (`asyncpg`).
 - Your `.env` should have: 
  
   `DATABASE_URL=postgresql+asyncpg://username:password@host/dbname`
 
-## Database Migrations
+## 6. Database Migrations
 
 Alembic Commands
 ```
@@ -177,13 +177,13 @@ alembic revision --autogenerate -m "Add marks table"
 alembic upgrade head
 ```
 
-## Deployment
+## 7. Deployment
 - Backend containerized with Docker
 - Production: `gunicorn -k uvicorn.workers.UvicornWorker`
 - .env used for environment-specific configs
 - Future: CI/CD pipeline integration recommended
 
-## Security Considerations
+## 8. Security Considerations
 - Password hashing with bcrypt
 - Expiring JWT tokens & refresh mechanism
 - RBAC for API access
@@ -191,13 +191,13 @@ alembic upgrade head
 - HTTPS required in production
 - Logging of failed login attempts
 
-## Performance & Optimizations
+## 9. Performance & Optimizations
 - Async endpoints for high throughput
 - PostgreSQL connection pooling
 - Query optimization using **selectinload** for relations
 - Caching planned with Redis for future improvements
 
-## Future Improvements
+## 10. Future Improvements
 - Real-time WebSocket notifications (attendance, marks updates)
 - Admin dashboard for token & session management
 - Password reset & email verification flows
