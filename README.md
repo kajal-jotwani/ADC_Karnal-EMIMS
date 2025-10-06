@@ -145,6 +145,31 @@ npm install
 npm run dev
 ```
 
+## 🐳 Docker Setup
+
+Use Docker to run both the backend and frontend in isolated containers. Make sure you have Docker and Docker Compose installed.
+
+1. **Create and configure environment files.**
+
+Create `.env` files in both the `backend` and `frontend` directories by copying from their respective `.env.example` files.
+
+2. **Run the services.**
+
+From the root directory of the project, run the following command to build and start the containers. This will start both the backend and frontend services.
+
+```
+docker compose up --build
+```
+
+3. **Access the application.**
+
+The frontend will be accessible at `http://localhost:5173`. The backend API will be running at `http://localhost:8000`.
+
+To stop the services, press Ctrl + C in the terminal and then run:
+```
+docker compose down
+```
+
 ## High level repository structure
 This repository contains both frontend and backend code for the Education Management System for Karnal. Below is a high-level overview of the folder and file structure:
 
