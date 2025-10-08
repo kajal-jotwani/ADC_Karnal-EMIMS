@@ -8,7 +8,7 @@ from sqlmodel import select, func
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import List, Dict, Any, Optional
 from src.db.main import get_session
-from src.auth.dependencies import get_current_active_user, require_admin_or_principal
+from src.auth.dependencies import get_current_active_user, require_admin
 from src.auth.models import User, UserRole
 from src.models import Student, Class, School, Subject, Marks, TeacherAssignment
 
@@ -107,7 +107,7 @@ async def get_class_performance(
     response = []
     for c in classes:
         response.append({
-            "class_ids": c.id,
+            "class_id": c.id,
             "class": f"{c.grade}{c.section}",
             "studentCount": students_counts.get(c.id, 0),
             "subjects": subject_avgs.get(c.id, {})
@@ -117,7 +117,7 @@ async def get_class_performance(
 # School comparison
 @router.get("/school-comparison")
 async def get_school_comparison(
-    current_user: User = Depends(require_admin_or_principal),
+    current_user: User = Depends(require_admin),
     session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
     
