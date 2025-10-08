@@ -23,8 +23,20 @@ async def get_subject_performance(
 ) -> List[Dict[str, Any]]:
     
     """Average marks by subjects for a school"""
+    """Average marks by subjects for a school"""
     if current_user.role == UserRole.PRINCIPAL:
         school_id = current_user.school_id
+    elif current_user.role == UserRole.TEACHER:
+        # Get school_id from teacher's assigned classes
+        teacher_class = (await session.exec(
+            select(Class.school_id)
+            .join(TeacherAssignment, TeacherAssignment.class_id == Class.id)
+            .where(TeacherAssignment.teacher_id == current_user.id)
+            .limit(1)
+        )).first()
+        if not teacher_class:
+            raise HTTPException(status_code=403, detail="No classes assigned")
+        school_id = teacher_class
     elif school_id is None:
         raise HTTPException(status_code=400, detail="School ID required")
     
