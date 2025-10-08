@@ -23,7 +23,6 @@ async def get_subject_performance(
 ) -> List[Dict[str, Any]]:
     
     """Average marks by subjects for a school"""
-    """Average marks by subjects for a school"""
     if current_user.role == UserRole.PRINCIPAL:
         school_id = current_user.school_id
     elif current_user.role == UserRole.TEACHER:
