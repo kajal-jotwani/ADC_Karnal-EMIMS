@@ -32,6 +32,10 @@ async def create_class(
     if not teacher: 
         raise HTTPException(status_code=404, detail="Teacher not found")
     
+    if current_user.role == UserRole.PRINCIPAL and class_create.school_id != current_user.school_id:
+        raise HTTPException(status_code=403, detail="Cannot create class for another school")
+
+
     if current_user.role == UserRole.PRINCIPAL and teacher.school_id != current_user.school_id:
         raise HTTPException(status_code=403, detail="Cannot assign teacher from another school")
     
