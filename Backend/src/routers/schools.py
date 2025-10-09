@@ -1,18 +1,18 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
-from typing import List 
+from typing import List, Optional 
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.models import User, UserRole
 from src.auth.dependencies import get_current_active_user, require_admin_or_principal, require_admin, require_principal
 from src.db.main import get_session
-from src.models import School, District, SchoolCreate
+from src.models.models import School, District, SchoolCreate
 
 router = APIRouter()
 
 # List all schools -> only district admin can view all schools 
 @router.get("/", response_model=List[School])
 async def list_schools(
-    district_id: int = None, 
+    district_id: Optional[int] = None,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(require_admin)
     ):
