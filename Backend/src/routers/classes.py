@@ -64,10 +64,18 @@ async def list_classes(
 ):
     """List all classes, with optional filtering by school_id"""
     
+    statement = select(Class)
+
     if current_user.role == UserRole.PRINCIPAL:
         school_id = current_user.school_id
     
-    statement = select(Class)
+    elif current_user.role == UserRole.TEACHER:
+        teacher_result = await session.exec(select(Teacher).where(Teacher.email == current_user.email))
+        teacher = teacher_result.first()
+        if not teacher:
+            raise HTTPException(status_code=404, detail="Teacher record not found")
+        statement = statement.where(Class.teacher_id == teacher.id)
+
     if school_id: 
         statement = statement.where(Class.school_id == school_id)
 
