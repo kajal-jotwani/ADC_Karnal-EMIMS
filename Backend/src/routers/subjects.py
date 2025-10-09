@@ -75,6 +75,6 @@ async def delete_subject(
     if not subject:
         raise HTTPException(status_code=404, detail="Subject not found")
     
-    await session.delete(subject)
+    session.delete(subject)
     await session.commit()
     return {"message": "Subject deleted successfully"}
