@@ -266,3 +266,16 @@ class ExamResponse(SQLModel):
     max_marks: float
     exam_date: Optional[date]
     created_at: datetime
+
+class SchoolCreate(SQLModel):
+    name: str
+    district_id: int
+    address: Optional[str] = None
+    phone: Optional[str] = None
+    email: Optional[str] = None
+
+class SubjectCreate(SQLModel):
+    name: str
+
+class SubjectUpdate(SQLModel):
+    name: Optional[str] = None
