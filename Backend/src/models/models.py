@@ -57,7 +57,7 @@ class Class(SQLModel, table=True):
     school: School = Relationship(back_populates="classes")
     teacher: Optional["Teacher"] = Relationship(back_populates="assigned_classes")
     students: List["Student"] = Relationship(back_populates="class_")
-    attendance_records: List["Attendance"] = Relationship(back_populates="class_", sa_kwargs={"cascade": "all, delete-orphan"})
+    attendance_records: List["Attendance"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     exams: List["Exam"] = Relationship(back_populates="class_")
     teacher_assignments: List["TeacherAssignment"] = Relationship(back_populates="class_")
 
