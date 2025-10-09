@@ -45,7 +45,8 @@ async def get_teacher_classes(
         raise HTTPException(status_code=403, detail="Access denied")
 
     elif current_user.role == UserRole.TEACHER:
-        current_teacher = await session.exec(select(Teacher).where(Teacher.email == current_user.email)).first()
+        result = await session.exec(select(Teacher).where(Teacher.email == current_user.email))
+        current_teacher = result.first()
         if not current_teacher or current_teacher.id != teacher_id:
             raise HTTPException(status_code=403, detail="Access denied")
         
@@ -68,7 +69,7 @@ async def get_teacher_classes(
             school_id=class_.school_id,
             teacher_id=class_.teacher_id,
             teacher_name=teacher.name,
-            student_count=student_count
+            student_count=count
         ))
     
     return response
