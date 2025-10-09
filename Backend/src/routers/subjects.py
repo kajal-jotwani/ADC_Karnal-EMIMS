@@ -5,9 +5,9 @@ from typing import List
 from src.auth.models import User, UserRole
 from src.auth.dependencies import get_current_active_user, require_admin_or_principal
 from src.db.main import get_session
-from src.models import Subject, SubjectCreate, SubjectUpdate
+from src.models.models import Subject, SubjectCreate, SubjectUpdate
 
-router = APIRouter(prefix="/subjects", tags=["Subjects"])
+router = APIRouter()
 
 # Create a subject
 @router.post("/", response_model=Subject)
@@ -26,7 +26,7 @@ async def create_subject(
 @router.get("/", response_model=List[Subject])
 async def list_subjects(
     session: AsyncSession = Depends(get_session),
-    curent_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(get_current_active_user)
     ):
     result = await session.exec(select(Subject))
     subjects = result.all()
