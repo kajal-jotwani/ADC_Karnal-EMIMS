@@ -1,3 +1,4 @@
+from email.policy import default
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import ForeignKey
 from typing import Optional, List
@@ -58,8 +59,8 @@ class Class(SQLModel, table=True):
     teacher: Optional["Teacher"] = Relationship(back_populates="assigned_classes")
     students: List["Student"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     attendance_records: List["Attendance"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
-    exams: List["Exam"] = Relationship(back_populates="class_")
-    teacher_assignments: List["TeacherAssignment"] = Relationship(back_populates="class_")
+    exams: List["Exam"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    teacher_assignments: List["TeacherAssignment"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class Teacher(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
@@ -71,10 +72,10 @@ class Teacher(SQLModel, table=True):
     # Relationships
     school: School = Relationship(back_populates="teachers")
     assigned_classes: List[Class] = Relationship(back_populates="teacher")
-    marks: List["Marks"] = Relationship(back_populates="teacher")
-    assignments: List["TeacherAssignment"] = Relationship(back_populates="teacher")
-    attendance_records: List["Attendance"] = Relationship(back_populates="teacher")
-    exams: List["Exam"] = Relationship(back_populates="teacher")
+    marks: List["Marks"] = Relationship(back_populates="teacher", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    assignments: List["TeacherAssignment"] = Relationship(back_populates="teacher", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    attendance_records: List["Attendance"] = Relationship(back_populates="teacher", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    exams: List["Exam"] = Relationship(back_populates="teacher", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 
 # SUBJECT & ASSIGNMENTS
@@ -116,15 +117,15 @@ class Student(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     roll_no: str
-    class_id: int = Field(ForeignKey("class.id", ondelete="CASCADE"))
+    class_id: int = Field(default=None, foreign_key="class.id")
     date_enrolled: datetime = Field(default_factory=datetime.utcnow)
 
     # Relationships
     class_: Class = Relationship(back_populates="students")
-    marks: List["Marks"] = Relationship(back_populates="student")
-    attendance_records: List["Attendance"] = Relationship(back_populates="student")
-    exam_marks: List["ExamMarks"] = Relationship(back_populates="student")
-    subjects: List[StudentSubject] = Relationship(back_populates="student")
+    marks: List["Marks"] = Relationship(back_populates="student", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    attendance_records: List["Attendance"] = Relationship(back_populates="student", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    exam_marks: List["ExamMarks"] = Relationship(back_populates="student", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
+    subjects: List[StudentSubject] = Relationship(back_populates="student", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 
 # MARKS & ATTENDANCE
@@ -166,7 +167,7 @@ class Exam(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str
     subject_id: int = Field(foreign_key="subject.id")
-    class_id: int = Field(foreign_key="class.id")
+    class_id: int = Field(foreign_key="class.id", nullable=False)
     teacher_id: int = Field(foreign_key="teacher.id")
     exam_type: ExamType = Field(default=ExamType.CUSTOM)
     max_marks: float = Field(default=100.0)
@@ -177,7 +178,7 @@ class Exam(SQLModel, table=True):
     subject: Subject = Relationship(back_populates="exams")
     class_: Class = Relationship(back_populates="exams")
     teacher: Teacher = Relationship(back_populates="exams")
-    exam_marks: List["ExamMarks"] = Relationship(back_populates="exam")
+    exam_marks: List["ExamMarks"] = Relationship(back_populates="exam", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
 
 class ExamMarks(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
