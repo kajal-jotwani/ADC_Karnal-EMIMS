@@ -40,4 +40,4 @@ app.include_router(classes.router, prefix=f"/api/{version}/routers/classes", tag
 app.include_router(teachers.router, prefix=f"/api/{version}/routers/teachers", tags=["teachers"])
 app.include_router(attendance.router, prefix=f"/api/{version}/routers/attendance", tags=["attendance"])
 app.include_router(students.router, prefix=f"/api/{version}/routers/students", tags=["students"])
-#app.include_router(exams.router, prefix=f"/api/{version}/routers/exams", tags=["exams"])
+app.include_router(exams.router, prefix=f"/api/{version}/routers/exams", tags=["exams"])
