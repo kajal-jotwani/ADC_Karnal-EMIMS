@@ -1,11 +1,11 @@
 from sqlmodel import SQLModel, Field, Relationship
+from sqlalchemy import ForeignKey
 from typing import Optional, List
 from datetime import datetime, date
 from enum import Enum
 
 # Import auth models
 #from src.auth.models import User, UserRole, UserStatus
-
 
 # ENUMS
 
@@ -56,7 +56,7 @@ class Class(SQLModel, table=True):
     # Relationships
     school: School = Relationship(back_populates="classes")
     teacher: Optional["Teacher"] = Relationship(back_populates="assigned_classes")
-    students: List["Student"] = Relationship(back_populates="class_")
+    students: List["Student"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     attendance_records: List["Attendance"] = Relationship(back_populates="class_", sa_relationship_kwargs={"cascade": "all, delete-orphan"})
     exams: List["Exam"] = Relationship(back_populates="class_")
     teacher_assignments: List["TeacherAssignment"] = Relationship(back_populates="class_")
@@ -116,7 +116,7 @@ class Student(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(index=True)
     roll_no: str
-    class_id: int = Field(foreign_key="class.id")
+    class_id: int = Field(ForeignKey("class.id", ondelete="CASCADE"))
     date_enrolled: datetime = Field(default_factory=datetime.utcnow)
 
     # Relationships
