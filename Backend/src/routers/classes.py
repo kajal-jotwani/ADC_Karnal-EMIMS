@@ -83,7 +83,9 @@ async def list_classes(
 
     #preload student counts 
     counts_query = select(Student.class_id, func.count(Student.id)).group_by(Student.class_id)
-    counts = dict(await session.exec(counts_query))
+    counts_result = await session.exec(counts_query)
+    counts_list = counts_result.all()
+    counts = dict(counts_list)
 
     result = []
     for class_ in classes:
