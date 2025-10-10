@@ -34,7 +34,7 @@ async def create_student(
     existing_result = await session.exec(
         select(Student).where(
             Student.class_id == student.class_id,
-            Student.roll_number == student.roll_number
+            Student.roll_no == student.roll_no
         )
     )
     existing_student = existing_result.first()
@@ -174,11 +174,11 @@ async def update_student(
         if class_.school_id != current_user.school_id:
             raise HTTPException(status_code=403, detail="Access denied")   
     
-    if student_update.class_id != student.class_id or student_update.roll_number != student.roll_number:
+    if student_update.class_id != student.class_id or student_update.roll_no != student.roll_no:
         existing_result = await session.exec(
             select(Student).where(
                 Student.class_id == student_update.class_id,
-                Student.roll_number == student_update.roll_number,
+                Student.roll_no == student_update.roll_no,
                 Student.id != student.id
             )
         )
@@ -260,8 +260,10 @@ async def record_marks(
     if student.class_id != class_.id:
         raise HTTPException(status_code=400, detail="Student does not belong to this class")
     
-    marks.teacher_id = teacher.id
-    db_marks = Marks(**marks.model_dump())
+    data = marks.model_dump()
+    data['teacher_id'] = teacher.id
+    db_marks = Marks(**data)
+    
     session.add(db_marks)
     await session.commit()
     await session.refresh(db_marks)
