@@ -40,7 +40,7 @@ async def mark_attendance(
 
         if not class_ or class_.teacher_id != teacher.id:
             raise HTTPException(status_code=403, detail=f"Access denied to class {data.class_id}")
-        if not student or student.class_id != data.cclass_id:
+        if not student or student.class_id != data.class_id:
             raise HTTPException(status_code=400, detail=f"Student {data.student_id} not in class {data.class_id}")
         
         # Check if attendance already marked for this student on this date
@@ -48,7 +48,7 @@ async def mark_attendance(
             select(Attendance).where(
                 Attendance.student_id == data.student_id,
                 Attendance.class_id == data.class_id,
-                Attendance.date == data.date
+                Attendance.attendance_date == data.date
             )
         )
         existing = existing_record.first()
@@ -62,7 +62,7 @@ async def mark_attendance(
             new_attendance = Attendance(
                 student_id=data.student_id,
                 class_id=data.class_id,
-                date=data.date,
+                attendance_date=data.date,
                 teacher_id=teacher.id,
                 is_present=data.is_present
             )
@@ -78,7 +78,7 @@ async def mark_attendance(
             student_id=record.student_id,
             student_name=students.get(record.student_id).name if students.get(record.student_id) else "Unknown",
             is_present=record.is_present,
-            date=record.date
+            date=record.attendance_date
         ) for record in attendance_records
     ]
 
@@ -104,15 +104,15 @@ async def get_attendance_for_class_date(
         teacher = teacher_result.first()
         if not teacher or class_.teacher_id != teacher.id:
             raise HTTPException(status_code=403, detail="Access denied")
-        elif current_user.role == UserRole.PRINCIPAL and class_.school_id != current_user.school_id:
-            raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user.role == UserRole.PRINCIPAL and class_.school_id != current_user.school_id:
+        raise HTTPException(status_code=403, detail="Access denied")
         
     attendance_result = await session.exec(
         select(Attendance, Student)
         .join(Student, Attendance.student_id == Student.id)
         .where(
             Attendance.class_id == class_id,
-            Attendance.date == attendance_date
+            Attendance.attendance_date == attendance_date
         )
     )
 
@@ -122,7 +122,7 @@ async def get_attendance_for_class_date(
             student_id=student.id,
             student_name=student.name,
             is_present=attendance.is_present,
-            date=attendance.date
+            date=attendance.attendance_date
         )
         for attendance, student in attendance_result.all()
     ]
@@ -148,24 +148,24 @@ async def get_student_attendance_summary(
         if not teacher or not class_ or class_.teacher_id != teacher.id:
             raise HTTPException(status_code=403, detail="Access denied")
         
-        elif current_user.role == UserRole.PRINCIPAL:
-            class_ = await session.get(Class, student.class_id)
-            if not class_ or class_.school_id != current_user.school_id:
-                raise HTTPException(status_code=403, detail="Access denied")
+    elif current_user.role == UserRole.PRINCIPAL:
+        class_ = await session.get(Class, student.class_id)
+        if not class_ or class_.school_id != current_user.school_id:
+            raise HTTPException(status_code=403, detail="Access denied")
             
-        attendance_result = await session.exec(
+    attendance_result = await session.exec(
             select(Attendance)
             .where(Attendance.student_id == student_id)
         )
-        records = attendance_result.all()
-        total_days = len(records)
-        present_days = sum(1 for record in records if record.is_present)
-        attendance_percentage = (present_days / total_days * 100) if total_days > 0 else 0
+    records = attendance_result.all()
+    total_days = len(records)
+    present_days = sum(1 for record in records if record.is_present)
+    attendance_percentage = (present_days / total_days * 100) if total_days > 0 else 0
 
-        return{
-            "student_id": student.id,
-            "student_name": student.name,
-            "total_days": total_days,
-            "present_days": present_days,
-            "attendance_percentage": round(attendance_percentage, 2)
-        }
+    return{
+        "student_id": student.id,
+        "student_name": student.name,
+        "total_days": total_days,
+        "present_days": present_days,
+        "attendance_percentage": round(attendance_percentage, 2)
+    }
