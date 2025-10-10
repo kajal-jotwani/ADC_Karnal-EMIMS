@@ -58,7 +58,7 @@ async def create_student(
 # List all students in a class
 @router.get("/", response_model=List[StudentResponse])
 async def list_students(
-    class_id: int,
+    class_id: int | None = None,
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
@@ -75,7 +75,7 @@ async def list_students(
         teacher_classes_result = await session.exec(
             select(Class.id).where(Class.teacher_id == teacher.id)
         )
-        teacher_classes = [c.id for c in teacher_classes_result.all()]
+        teacher_classes = teacher_classes_result.all()
         if not teacher_classes:
             return []
         
@@ -85,7 +85,7 @@ async def list_students(
         school_classes_result = await session.exec(
             select(Class.id).where(Class.school_id == current_user.school_id)
         )
-        school_classes = [c.id for c in school_classes_result.all()]
+        school_classes = school_classes_result.all()
         if not school_classes:
             return []
         
@@ -263,7 +263,7 @@ async def record_marks(
     data = marks.model_dump()
     data['teacher_id'] = teacher.id
     db_marks = Marks(**data)
-    
+
     session.add(db_marks)
     await session.commit()
     await session.refresh(db_marks)

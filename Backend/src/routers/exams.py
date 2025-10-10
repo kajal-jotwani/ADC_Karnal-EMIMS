@@ -14,7 +14,7 @@ router = APIRouter()
 
 #helper function to fetch teacher by current user
 async def get_current_teacher(current_user: User, session: AsyncSession) -> Teacher:
-    if current_user.role != UserRole.teacher:
+    if current_user.role != UserRole.TEACHER:
         raise HTTPException(status_code=403, detail="Only teachers can perform this action")
     result = await session.exec(select(Teacher).where(Teacher.user_id == current_user.id))
     teacher = result.first()
@@ -66,7 +66,7 @@ async def get_teacher_exams(
         teacher = await get_current_teacher(current_user, session)
         if teacher.id != teacher_id:
             raise HTTPException(status_code=403, detail="You can only access your own exams")
-    elif current_user.role != UserRole.PRINCIPLE:
+    elif current_user.role == UserRole.PRINCIPAL:
         teacher = await session.get(Teacher, teacher_id)
         if not teacher or teacher.school_id != current_user.school_id:
             raise HTTPException(status_code=403, detail="You can only access exams from your school")
@@ -167,7 +167,7 @@ async def get_exam_marks(
     
     exam = await session.get(Exam, exam_id)
     if not exam :
-        raise HTTPException(status_code=403, detail="Exam not found")
+        raise HTTPException(status_code=404, detail="Exam not found")
     
     if current_user.role == UserRole.TEACHER:
         teacher = await get_current_teacher(current_user, session)
@@ -188,7 +188,7 @@ async def get_exam_marks(
         {
             "student_id": student.id,
             "student_name": student.name,
-            "roll_number": student.roll_number,
+            "roll_number": student.roll_no,
             "marks_obtained": exam_marks.marks_obtained
         } for exam_marks, student in marks
     ]
@@ -231,7 +231,10 @@ async def get_student_performance(
             "marks_obtained": exam_marks.marks_obtained,
             "max_marks": exam.max_marks,
             "exam_date": exam.exam_date,
-            "percentage": round((exam_marks.marks_obtained / exam.max_marks) * 100, 2),
+            "percentage": (
+                round((exam_marks.marks_obtained / exam.max_marks) * 100, 2)
+                if exam.max_marks else 0.0
+            ),
             "created_at": exam.created_at
         } for exam_marks, exam, subject in performance
     ]
