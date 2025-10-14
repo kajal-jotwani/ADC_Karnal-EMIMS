@@ -8,8 +8,21 @@ logger = logging.getLogger('uvicorn.access')
 logger.disabled = True
 
 def register_middleware(app: FastAPI):
-    
 
+    # IMPORTANT: Add CORS middleware FIRST
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ],
+        allow_methods=["*"],
+        allow_headers=["*"],
+        allow_credentials=True,
+    )
+    
     @app.middleware("http")
     async def custom_logging(request: Request, call_next):
         start_time = time.time()
@@ -21,12 +34,4 @@ def register_middleware(app: FastAPI):
 
         print(message)
 
-        return response 
-    
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-        allow_credentials=True,
-    )
+        return response
