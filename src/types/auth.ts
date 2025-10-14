@@ -2,35 +2,30 @@
 export type UserRole = "admin" | "principal" | "teacher";
 export type UserStatus = "active" | "inactive" | "suspended";
 
-// User-related Types
 
 export interface User {
   id: number;
   email: string;
-  firstName: string;
-  lastName: string;
-  contactNumber?: string;
+  first_name: string;          
+  last_name: string;           
+  contact_number?: string;     
   role: UserRole;
   status: UserStatus;
-  schoolId?: number;
-  schoolName?: string;
-  createdAt: string; // ISO datetime
-  updatedAt?: string; // optional for responses
-  lastLogin?: string;
-  isVerified: boolean;
-  isDeleted?: boolean; // included for admin-only contexts
+  school_id?: number;           
+  school_name?: string;         
+  created_at: string;           
+  updated_at?: string;          
+  last_login?: string;          
+  is_verified: boolean;         
+  is_deleted?: boolean;         
 }
-
-// Tokens
 
 export interface TokenResponse {
-  accessToken: string;
-  refreshToken: string;
-  tokenType: "bearer";
-  expiresIn: number; // in seconds
+  access_token: string;         
+  refresh_token: string;       
+  token_type: "bearer";
+  expires_in: number;          
 }
-
-// API DTOs
 
 export interface LoginCredentials {
   email: string;
@@ -43,7 +38,7 @@ export interface LoginResponse {
 }
 
 export interface RefreshTokenRequest {
-  refreshToken: string;
+  refresh_token: string;       
 }
 
 // Password reset flows
@@ -53,12 +48,12 @@ export interface PasswordResetRequest {
 
 export interface PasswordResetConfirm {
   token: string;
-  newPassword: string;
+  new_password: string;        
 }
 
 export interface ChangePasswordRequest {
-  currentPassword: string;
-  newPassword: string;
+  current_password: string;    
+  new_password: string;       
 }
 
 // Frontend State
