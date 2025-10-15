@@ -6,7 +6,8 @@ import AlertsWidget from "../components/dashboard/AlertsWidget";
 import FilterBar from "../components/shared/FilterBar";
 import ExportButton from "../components/shared/ExportButton";
 import { School, Users, UserCog, BookOpen, BookText, BadgeAlert } from "lucide-react";
-import { dashboardAPI, DashboardStats, PerformanceData, Alert, ActivityItem } from "../services/api";
+import { dashboardAPI } from "../services/api";
+import { DashboardStats, PerformanceData, Alert, ActivityItem } from "../types/api";
 
 const filterOptions = {
   districts: [
