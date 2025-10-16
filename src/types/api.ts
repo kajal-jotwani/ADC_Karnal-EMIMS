@@ -1,3 +1,4 @@
+//dashboard types
 export interface DashboardStats {
   total_schools?: number;
   total_students?: number;
@@ -36,4 +37,25 @@ export interface School {
   address: string;
   phone: string;
   email: string;
+}
+
+// Analytics Types
+export interface ClassPerformance {
+  class_id: number;
+  class: string;
+  studentCount: number;
+  subjects: Record<string, number>; // { Math: 85.5, Science: 78.2 }
+}
+
+export interface SchoolComparison {
+  school_id: number;
+  school: string;
+  averageScore: number;
+  studentCount: number;
+  subjects: Record<string, number>;
+}
+
+export interface StudentProgress {
+  term: string;
+  subjects: Record<string, number>;
 }

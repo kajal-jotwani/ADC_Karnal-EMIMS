@@ -75,7 +75,7 @@ export const dashboardAPI = {
         average_attendance: Number(data.average_attendance) || 0,
       };
     } catch (error) {
-      console.error("Error fetching dashboard stats:", error);
+      console.error("[DashboardAPI] Error fetching stats:", error);
       return {
         total_schools: 0,
         total_students: 0,
@@ -95,7 +95,8 @@ export const dashboardAPI = {
         ...item,
         timestamp: item.timestamp || new Date().toISOString(),
       }));
-    } catch {
+    } catch (error) {
+      console.error("[DashboardAPI] Error fetching recent activity:", error);
       return [];
     }
   },
@@ -107,7 +108,8 @@ export const dashboardAPI = {
         subject: item.subject || "Unknown",
         average: Number(item.average) || 0,
       }));
-    } catch {
+    } catch (error) {
+      console.error("[DashboardAPI] Error fetching performance data:", error);
       return [];
     }
   },
@@ -119,7 +121,8 @@ export const dashboardAPI = {
         ...item,
         time: item.time || new Date().toISOString(),
       }));
-    } catch {
+    } catch (error) {
+      console.error("[DashboardAPI] Error fetching alerts:", error);
       return [];
     }
   },
@@ -127,29 +130,59 @@ export const dashboardAPI = {
 
 // Schools API services
 export const schoolsAPI = {
-  // Get all schools
   getAll: async (district_id?: number): Promise<School[]> => {
     try {
       const params = district_id ? { district_id } : {};
       const { data } = await api.get<School[]>("/routers/schools/", { params });
       return data;
     } catch (error) {
-      console.error("Error fetching schools:", error);
+      console.error("[SchoolsAPI] Error fetching all schools:", error);
       return [];
     }
   },
 
-  // Get single school by ID
   getById: async (school_id: number): Promise<School | null> => {
     try {
       const { data } = await api.get<School>(`/routers/schools/${school_id}`);
       return data;
     } catch (error) {
-      console.error("Error fetching school:", error);
+      console.error(`[SchoolsAPI] Error fetching school ${school_id}:`, error);
       return null;
     }
   },
 };
 
+// Analytics API services
+export const analyticsAPI = {
+  getClassPerformance: async (): Promise<any[]> => {
+    try {
+      const { data } = await api.get("/routers/analytics/class-performance");
+      return data;
+    } catch (error) {
+      console.error("[AnalyticsAPI] Error fetching class performance:", error);
+      return [];
+    }
+  },
+
+  getSchoolComparison: async (): Promise<any[]> => {
+    try {
+      const { data } = await api.get("/routers/analytics/school-comparison");
+      return data;
+    } catch (error) {
+      console.error("[AnalyticsAPI] Error fetching school comparison:", error);
+      return [];
+    }
+  },
+
+  getStudentProgress: async (student_id: number): Promise<any[]> => {
+    try {
+      const { data } = await api.get(`/routers/analytics/student-progress/${student_id}`);
+      return data;
+    } catch (error) {
+      console.error(`[AnalyticsAPI] Error fetching student ${student_id} progress:`, error);
+      return [];
+    }
+  },
+};
 
 export default api;
