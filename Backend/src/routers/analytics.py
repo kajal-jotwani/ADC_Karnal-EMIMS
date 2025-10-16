@@ -116,7 +116,7 @@ async def get_class_performance(
 # School comparison
 @router.get("/school-comparison")
 async def get_school_comparison(
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
     
@@ -125,14 +125,18 @@ async def get_school_comparison(
         raise HTTPException(status_code=403, detail="Admin access required")
 
     # School stats
-    school_stats = dict(
-        (await session.exec(
+    school_stats = {
+    school_id: (student_count, avg_score)
+    for school_id, student_count, avg_score in (
+        await session.exec(
             select(Class.school_id, func.count(Student.id), func.avg(Marks.marks))
             .join(Student, Student.class_id == Class.id)
             .join(Marks, Marks.student_id == Student.id)
             .group_by(Class.school_id)
-        )).all()
-    )
+        )
+    ).all()
+}
+
 
     # Subject stats
     results = (await session.exec(
