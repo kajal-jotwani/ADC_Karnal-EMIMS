@@ -43,15 +43,15 @@ export interface School {
 export interface ClassPerformance {
   class_id: number;
   class: string;
-  studentCount: number;
+  student_count: number;
   subjects: Record<string, number>; // { Math: 85.5, Science: 78.2 }
 }
 
 export interface SchoolComparison {
   school_id: number;
   school: string;
-  averageScore: number;
-  studentCount: number;
+  average_score: number;
+  student_count: number;
   subjects: Record<string, number>;
 }
 
