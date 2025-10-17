@@ -197,7 +197,7 @@ class ClassCreate(SQLModel):
     grade: str
     section: str
     school_id: int
-    teacher_id: int
+    teacher_id: Optional[int] = None
 
 class ClassResponse(SQLModel):
     id: int
