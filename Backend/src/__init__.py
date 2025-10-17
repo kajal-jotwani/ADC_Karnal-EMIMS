@@ -3,7 +3,7 @@ from src.db.main import init_db
 from contextlib import asynccontextmanager
 from src.auth.routes import auth_router 
 from .middleware import register_middleware
-from src.routers import dashboard, analytics, subjects, schools, classes, teachers, attendance, students, exams
+from src.routers import dashboard, analytics, subjects, schools, classes, teachers, attendance, students, exams, teacher_assignments
 
 @asynccontextmanager
 async def life_span(app: FastAPI):
@@ -41,3 +41,4 @@ app.include_router(teachers.router, prefix=f"/api/{version}/routers/teachers", t
 app.include_router(attendance.router, prefix=f"/api/{version}/routers/attendance", tags=["attendance"])
 app.include_router(students.router, prefix=f"/api/{version}/routers/students", tags=["students"])
 app.include_router(exams.router, prefix=f"/api/{version}/routers/exams", tags=["exams"])
+app.include_router(teacher_assignments.router, prefix=f"/api/{version}/routers/teacher_assignments", tags=["teacher_assignments"])
