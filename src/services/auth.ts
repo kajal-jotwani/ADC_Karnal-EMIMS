@@ -7,6 +7,7 @@ import {
   LoginResponse,
   TokenResponse,
 } from "../types/auth";
+import { string } from "zod";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
@@ -158,4 +159,25 @@ export const getRoutePermissions = (path: string): UserRole[] => {
   };
 
   return routePermissions[path] || [];
+};
+
+export const changePassword = async (
+  currentPassword: string,
+  newPassword: string
+): Promise<{
+  success: any; message: string 
+}> => {
+  try {
+    const { data } = await api.post<{ success: any; message: string }>("/auth/change-password", {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+    return data;
+  } catch (error: any) {
+    console.error("Password change failed:", error);
+    if (error.response?.data?.detail) {
+      throw new Error(error.response.data.detail);
+    }
+    throw new Error("Unable to change password. Please try again later.");
+  }
 };
