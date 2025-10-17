@@ -10,7 +10,11 @@ import {
   ClassCreateRequest, 
   Teacher, 
   Subject,
-  TeacherAssignment
+  TeacherAssignment,
+  SubjectPerformance,
+  SchoolComparison,
+  StudentProgress,
+  ClassPerformance
 } from "../types/api";
 
 const API_BASE_URL =
@@ -159,32 +163,78 @@ export const schoolsAPI = {
 
 // Analytics API services
 export const analyticsAPI = {
-  getClassPerformance: async (): Promise<any[]> => {
+  // Get class performance (subject-wise breakdown by class)
+  getClassPerformance: async (): Promise<ClassPerformance[]> => {
     try {
-      const { data } = await api.get("/routers/analytics/class-performance");
-      return data;
-    } catch (error) {
+      const { data } = await api.get<ClassPerformance[]>("/routers/analytics/class-performance");
+      return data || [];
+    } catch (error: any) {
       console.error("[AnalyticsAPI] Error fetching class performance:", error);
+      console.error("[AnalyticsAPI] Error details:", error.response?.data);
+      
+      // If it's a 403, the user might not have permission
+      if (error.response?.status === 403) {
+        throw new Error("You don't have permission to view class performance data");
+      }
+      
       return [];
     }
   },
 
-  getSchoolComparison: async (): Promise<any[]> => {
+  // Get school comparison (overall performance by school)
+  getSchoolComparison: async (): Promise<SchoolComparison[]> => {
     try {
-      const { data } = await api.get("/routers/analytics/school-comparison");
-      return data;
-    } catch (error) {
+      const { data } = await api.get<SchoolComparison[]>("/routers/analytics/school-comparison");
+      return data || [];
+    } catch (error: any) {
       console.error("[AnalyticsAPI] Error fetching school comparison:", error);
+      console.error("[AnalyticsAPI] Error details:", error.response?.data);
+      
+      // If it's a 403, the user might not have admin access
+      if (error.response?.status === 403) {
+        throw new Error("Only administrators can view school comparison data");
+      }
+      
       return [];
     }
   },
 
-  getStudentProgress: async (student_id: number): Promise<any[]> => {
+  // Get student progress over time
+  getStudentProgress: async (student_id: number): Promise<StudentProgress[]> => {
     try {
-      const { data } = await api.get(`/routers/analytics/student-progress/${student_id}`);
-      return data;
-    } catch (error) {
+      const { data } = await api.get<StudentProgress[]>(
+        `/routers/analytics/student-progress/${student_id}`
+      );
+      return data || [];
+    } catch (error: any) {
       console.error(`[AnalyticsAPI] Error fetching student ${student_id} progress:`, error);
+      console.error("[AnalyticsAPI] Error details:", error.response?.data);
+      
+      if (error.response?.status === 404) {
+        throw new Error("Student not found");
+      }
+      if (error.response?.status === 403) {
+        throw new Error("You don't have permission to view this student's progress");
+      }
+      
+      return [];
+    }
+  },
+
+  // Get subject performance for a school (optional - useful for detailed view)
+  getSubjectPerformance: async (school_id?: number): Promise<SubjectPerformance[]> => {
+    try {
+      const params = school_id ? { school_id } : {};
+      console.log("[AnalyticsAPI] Fetching subject performance...", params);
+      const { data } = await api.get<SubjectPerformance[]>(
+        "/routers/analytics/subject-performance",
+        { params }
+      );
+      console.log("[AnalyticsAPI] Subject performance response:", data);
+      return data || [];
+    } catch (error: any) {
+      console.error("[AnalyticsAPI] Error fetching subject performance:", error);
+      console.error("[AnalyticsAPI] Error details:", error.response?.data);
       return [];
     }
   },

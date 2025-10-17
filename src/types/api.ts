@@ -43,21 +43,33 @@ export interface School {
 export interface ClassPerformance {
   class_id: number;
   class: string;
-  student_count: number;
-  subjects: Record<string, number>; // { Math: 85.5, Science: 78.2 }
+  studentCount: number;
+  subjects: {
+    [subjectName: string]: number;
+  };
 }
 
 export interface SchoolComparison {
   school_id: number;
   school: string;
-  average_score: number;
-  student_count: number;
-  subjects: Record<string, number>;
+  averageScore: number;
+  studentCount: number;
+  subjects: {
+    [subjectName: string]: number;
+  };
 }
 
 export interface StudentProgress {
   term: string;
-  subjects: Record<string, number>;
+  subjects: {
+    [subjectName: string]: number;
+  };
+}
+
+export interface SubjectPerformance {
+  subject_id: number;
+  subject: string;
+  average: number;
 }
 
 // Class Management Types
