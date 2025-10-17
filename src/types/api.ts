@@ -1,4 +1,4 @@
-//dashboard types
+// Dashboard types
 export interface DashboardStats {
   total_schools?: number;
   total_students?: number;
@@ -58,4 +58,58 @@ export interface SchoolComparison {
 export interface StudentProgress {
   term: string;
   subjects: Record<string, number>;
+}
+
+// Class Management Types
+export interface ClassItem {
+  id: number;
+  name: string;
+  grade: string;
+  section: string;
+  school_id: number;
+  teacher_id: number | null;
+  teacher_name: string | null;
+  student_count: number;
+}
+
+export interface ClassCreateRequest {
+  name: string;
+  grade: string;
+  section: string;
+  school_id: number;
+  teacher_id?: number | null;
+}
+
+// Teacher Types
+export interface Teacher {
+  id: number;
+  name: string;
+  email: string;
+  phone: string | null;
+  school_id: number;
+}
+
+// Subject Types
+export interface Subject {
+  id: number;
+  name: string;
+}
+
+// Teacher Assignment Types
+export interface TeacherAssignment {
+  id: number;
+  teacher_id: number;
+  class_id: number;
+  subject_id: number;
+}
+
+export interface TeacherAssignmentCreate {
+  teacher_id: number;
+  class_id: number;
+  subject_id: number;
+}
+
+// Extended Class with Assignments
+export interface ClassWithAssignments extends ClassItem {
+  assignments: TeacherAssignment[];
 }

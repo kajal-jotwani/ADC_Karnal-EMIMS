@@ -6,6 +6,11 @@ import {
   PerformanceData,
   Alert,
   School,
+  ClassItem, 
+  ClassCreateRequest, 
+  Teacher, 
+  Subject,
+  TeacherAssignment
 } from "../types/api";
 
 const API_BASE_URL =
@@ -182,6 +187,109 @@ export const analyticsAPI = {
       console.error(`[AnalyticsAPI] Error fetching student ${student_id} progress:`, error);
       return [];
     }
+  },
+};
+
+// Classes API
+export const classesApi = {
+  // Get all classes
+  getClasses: async (schoolId?: number): Promise<ClassItem[]> => {
+    const params = schoolId ? { school_id: schoolId } : {};
+    const response = await api.get('/routers/classes/', { params });
+    return response.data;
+  },
+
+  // Get single class
+  getClass: async (classId: number): Promise<ClassItem> => {
+    const response = await api.get(`/routers/classes/${classId}`);
+    return response.data;
+  },
+
+  // Create class
+  createClass: async (classData: ClassCreateRequest): Promise<ClassItem> => {
+    const response = await api.post('/routers/classes/', classData);
+    return response.data;
+  },
+
+  // Delete class
+  deleteClass: async (classId: number, confirm: boolean = false): Promise<{ message: string }> => {
+    const params = confirm ? { confirm: true } : {};
+    const response = await api.delete(`/routers/classes/${classId}`, { params });
+    return response.data;
+  },
+};
+
+// Teachers API
+export const teachersApi = {
+  // Get all teachers
+  getTeachers: async (schoolId?: number): Promise<Teacher[]> => {
+    const params = schoolId ? { school_id: schoolId } : {};
+    const response = await api.get('/routers/teachers/', { params });
+    return response.data;
+  },
+
+  // Get teacher classes
+  getTeacherClasses: async (teacherId: number): Promise<ClassItem[]> => {
+    const response = await api.get(`/routers/teachers/${teacherId}/classes`);
+    return response.data;
+  },
+
+  // Assign teacher to class (class teacher)
+  assignTeacherToClass: async (classId: number, teacherId: number): Promise<{ detail: string }> => {
+    const response = await api.put(`/routers/teachers/classes/${classId}/assign/${teacherId}`);
+    return response.data;
+  },
+};
+
+// Subjects API
+export const subjectsApi = {
+  // Get all subjects
+  getSubjects: async (): Promise<Subject[]> => {
+    const response = await api.get('/routers/subjects/');
+    return response.data;
+  },
+
+  // Create subject
+  createSubject: async (name: string): Promise<Subject> => {
+    const response = await api.post('/routers/subjects/', { name });
+    return response.data;
+  },
+
+  // Update subject
+  updateSubject: async (subjectId: number, name: string): Promise<Subject> => {
+    const response = await api.put(`/routers/subjects/${subjectId}`, { name });
+    return response.data;
+  },
+
+  // Delete subject
+  deleteSubject: async (subjectId: number): Promise<{ message: string }> => {
+    const response = await api.delete(`/routers/subjects/${subjectId}`);
+    return response.data;
+  },
+};
+
+// Teacher Assignments API (for subject-teacher assignments within classes)
+export const teacherAssignmentsApi = {
+  // Create teacher assignment (assign teacher to subject in a class)
+  createAssignment: async (classId: number, subjectId: number, teacherId: number): Promise<TeacherAssignment> => {
+    const response = await api.post('/routers/teacher_assignments/', {
+      teacher_id: teacherId,
+      class_id: classId,
+      subject_id: subjectId
+    });
+    return response.data;
+  },
+
+  // Get assignments for a class
+  getClassAssignments: async (classId: number): Promise<TeacherAssignment[]> => {
+    const response = await api.get(`/routers/teacher_assignments/class/${classId}`);
+    return response.data;
+  },
+
+  // Delete assignment
+  deleteAssignment: async (assignmentId: number): Promise<{ message: string }> => {
+    const response = await api.delete(`/routers/teacher_assignments/${assignmentId}`);
+    return response.data;
   },
 };
 
