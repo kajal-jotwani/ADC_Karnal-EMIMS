@@ -34,9 +34,9 @@ export interface School {
   id: number;
   name: string;
   district_id: number;
-  address: string;
-  phone: string;
-  email: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
 }
 
 // Analytics Types
