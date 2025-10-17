@@ -39,6 +39,39 @@ export interface School {
   email: string | null;
 }
 
+export interface SchoolDetail {
+  id: number;
+  name: string;
+  address: string | null;
+  phone: string | null;
+  email: string | null;
+  district_id: number;
+  stats: {
+    total_students: number;
+    total_teachers: number;
+    total_classes: number;
+    average_performance: number;
+  };
+  teachers: Array<{
+    id: number;
+    name: string;
+    email: string;
+    phone: string | null;
+    classes: string[];
+  }>;
+  classes: Array<{
+    id: number;
+    name: string;
+    grade: string;
+    section: string;
+    student_count: number;
+  }>;
+  subject_performance: Array<{
+    subject: string;
+    average: number;
+  }>;
+}
+
 // Analytics Types
 export interface ClassPerformance {
   class_id: number;

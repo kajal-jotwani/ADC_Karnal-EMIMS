@@ -14,7 +14,8 @@ import {
   SubjectPerformance,
   SchoolComparison,
   StudentProgress,
-  ClassPerformance
+  ClassPerformance,
+  SchoolDetail
 } from "../types/api";
 
 const API_BASE_URL =
@@ -138,6 +139,7 @@ export const dashboardAPI = {
 };
 
 // Schools API services
+
 export const schoolsAPI = {
   getAll: async (district_id?: number): Promise<School[]> => {
     try {
@@ -156,6 +158,30 @@ export const schoolsAPI = {
       return data;
     } catch (error) {
       console.error(`[SchoolsAPI] Error fetching school ${school_id}:`, error);
+      return null;
+    }
+  },
+
+  getDetails: async (school_id: number): Promise<SchoolDetail | null> => {
+    try {
+      console.log(`[SchoolsAPI] Fetching details for school ${school_id}`);
+      const { data } = await api.get<SchoolDetail>(`/routers/schools/${school_id}/details`);
+      console.log("[SchoolsAPI] School details response:", data);
+      return data;
+    } catch (error: any) {
+      console.error(`[SchoolsAPI] Error fetching school ${school_id} details:`, error);
+      console.error("[SchoolsAPI] Error details:", error.response?.data);
+      return null;
+    }
+  },
+
+  getMySchool: async (): Promise<School | null> => {
+    try {
+      console.log("[SchoolsAPI] Fetching my school (principal)");
+      const { data } = await api.get<School>("/routers/schools/my-school");
+      return data;
+    } catch (error: any) {
+      console.error("[SchoolsAPI] Error fetching my school:", error);
       return null;
     }
   },
