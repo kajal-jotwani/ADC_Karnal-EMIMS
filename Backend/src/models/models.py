@@ -1,7 +1,7 @@
 from email.policy import default
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import ForeignKey
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 from enum import Enum
 
@@ -280,3 +280,15 @@ class SubjectCreate(SQLModel):
 
 class SubjectUpdate(SQLModel):
     name: Optional[str] = None
+
+class SchoolDetailResponse(SQLModel):
+    id: int
+    name: str
+    address: str | None
+    phone: str | None
+    email: str | None
+    district_id: int
+    stats: Dict[str, Any]
+    teachers: List[Dict[str, Any]]
+    classes: List[Dict[str, Any]]
+    subject_performance: List[Dict[str, Any]]
