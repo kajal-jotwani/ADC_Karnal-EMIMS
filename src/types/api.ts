@@ -158,3 +158,12 @@ export interface TeacherAssignmentCreate {
 export interface ClassWithAssignments extends ClassItem {
   assignments: TeacherAssignment[];
 }
+
+export interface Student {
+  id: number;          
+  name: string;
+  roll_no: string;
+  class_id: number;
+  class_name?: string;
+  date_enrolled?: string;
+}

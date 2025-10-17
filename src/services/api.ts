@@ -6,16 +6,17 @@ import {
   PerformanceData,
   Alert,
   School,
-  ClassItem, 
-  ClassCreateRequest, 
-  Teacher, 
+  Student,
+  ClassItem,
+  ClassCreateRequest,
+  Teacher,
   Subject,
   TeacherAssignment,
   SubjectPerformance,
   SchoolComparison,
   StudentProgress,
   ClassPerformance,
-  SchoolDetail
+  SchoolDetail,
 } from "../types/api";
 
 const API_BASE_URL =
@@ -54,7 +55,9 @@ api.interceptors.response.use(
         if (newTokens) {
           const accessToken =
             (newTokens as any).access_token || (newTokens as any).accessToken;
-          api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+          api.defaults.headers.common[
+            "Authorization"
+          ] = `Bearer ${accessToken}`;
           originalRequest.headers.Authorization = `Bearer ${accessToken}`;
           return api(originalRequest);
         }
@@ -74,7 +77,9 @@ api.interceptors.response.use(
 export const dashboardAPI = {
   getStats: async (): Promise<DashboardStats> => {
     try {
-      const { data } = await api.get<DashboardStats>("/routers/dashboard/stats");
+      const { data } = await api.get<DashboardStats>(
+        "/routers/dashboard/stats"
+      );
       return {
         total_schools: data.total_schools || 0,
         total_students: data.total_students || 0,
@@ -100,7 +105,9 @@ export const dashboardAPI = {
 
   getRecentActivity: async (): Promise<ActivityItem[]> => {
     try {
-      const { data } = await api.get<ActivityItem[]>("/routers/dashboard/recent-activity");
+      const { data } = await api.get<ActivityItem[]>(
+        "/routers/dashboard/recent-activity"
+      );
       return (data || []).map((item) => ({
         ...item,
         timestamp: item.timestamp || new Date().toISOString(),
@@ -113,7 +120,9 @@ export const dashboardAPI = {
 
   getPerformanceData: async (): Promise<PerformanceData[]> => {
     try {
-      const { data } = await api.get<PerformanceData[]>("/routers/dashboard/performance-data");
+      const { data } = await api.get<PerformanceData[]>(
+        "/routers/dashboard/performance-data"
+      );
       return (data || []).map((item) => ({
         subject: item.subject || "Unknown",
         average: Number(item.average) || 0,
@@ -165,11 +174,16 @@ export const schoolsAPI = {
   getDetails: async (school_id: number): Promise<SchoolDetail | null> => {
     try {
       console.log(`[SchoolsAPI] Fetching details for school ${school_id}`);
-      const { data } = await api.get<SchoolDetail>(`/routers/schools/${school_id}/details`);
+      const { data } = await api.get<SchoolDetail>(
+        `/routers/schools/${school_id}/details`
+      );
       console.log("[SchoolsAPI] School details response:", data);
       return data;
     } catch (error: any) {
-      console.error(`[SchoolsAPI] Error fetching school ${school_id} details:`, error);
+      console.error(
+        `[SchoolsAPI] Error fetching school ${school_id} details:`,
+        error
+      );
       console.error("[SchoolsAPI] Error details:", error.response?.data);
       return null;
     }
@@ -192,17 +206,21 @@ export const analyticsAPI = {
   // Get class performance (subject-wise breakdown by class)
   getClassPerformance: async (): Promise<ClassPerformance[]> => {
     try {
-      const { data } = await api.get<ClassPerformance[]>("/routers/analytics/class-performance");
+      const { data } = await api.get<ClassPerformance[]>(
+        "/routers/analytics/class-performance"
+      );
       return data || [];
     } catch (error: any) {
       console.error("[AnalyticsAPI] Error fetching class performance:", error);
       console.error("[AnalyticsAPI] Error details:", error.response?.data);
-      
+
       // If it's a 403, the user might not have permission
       if (error.response?.status === 403) {
-        throw new Error("You don't have permission to view class performance data");
+        throw new Error(
+          "You don't have permission to view class performance data"
+        );
       }
-      
+
       return [];
     }
   },
@@ -210,45 +228,56 @@ export const analyticsAPI = {
   // Get school comparison (overall performance by school)
   getSchoolComparison: async (): Promise<SchoolComparison[]> => {
     try {
-      const { data } = await api.get<SchoolComparison[]>("/routers/analytics/school-comparison");
+      const { data } = await api.get<SchoolComparison[]>(
+        "/routers/analytics/school-comparison"
+      );
       return data || [];
     } catch (error: any) {
       console.error("[AnalyticsAPI] Error fetching school comparison:", error);
       console.error("[AnalyticsAPI] Error details:", error.response?.data);
-      
+
       // If it's a 403, the user might not have admin access
       if (error.response?.status === 403) {
         throw new Error("Only administrators can view school comparison data");
       }
-      
+
       return [];
     }
   },
 
   // Get student progress over time
-  getStudentProgress: async (student_id: number): Promise<StudentProgress[]> => {
+  getStudentProgress: async (
+    student_id: number
+  ): Promise<StudentProgress[]> => {
     try {
       const { data } = await api.get<StudentProgress[]>(
         `/routers/analytics/student-progress/${student_id}`
       );
       return data || [];
     } catch (error: any) {
-      console.error(`[AnalyticsAPI] Error fetching student ${student_id} progress:`, error);
+      console.error(
+        `[AnalyticsAPI] Error fetching student ${student_id} progress:`,
+        error
+      );
       console.error("[AnalyticsAPI] Error details:", error.response?.data);
-      
+
       if (error.response?.status === 404) {
         throw new Error("Student not found");
       }
       if (error.response?.status === 403) {
-        throw new Error("You don't have permission to view this student's progress");
+        throw new Error(
+          "You don't have permission to view this student's progress"
+        );
       }
-      
+
       return [];
     }
   },
 
   // Get subject performance for a school (optional - useful for detailed view)
-  getSubjectPerformance: async (school_id?: number): Promise<SubjectPerformance[]> => {
+  getSubjectPerformance: async (
+    school_id?: number
+  ): Promise<SubjectPerformance[]> => {
     try {
       const params = school_id ? { school_id } : {};
       console.log("[AnalyticsAPI] Fetching subject performance...", params);
@@ -259,7 +288,10 @@ export const analyticsAPI = {
       console.log("[AnalyticsAPI] Subject performance response:", data);
       return data || [];
     } catch (error: any) {
-      console.error("[AnalyticsAPI] Error fetching subject performance:", error);
+      console.error(
+        "[AnalyticsAPI] Error fetching subject performance:",
+        error
+      );
       console.error("[AnalyticsAPI] Error details:", error.response?.data);
       return [];
     }
@@ -271,7 +303,7 @@ export const classesApi = {
   // Get all classes
   getClasses: async (schoolId?: number): Promise<ClassItem[]> => {
     const params = schoolId ? { school_id: schoolId } : {};
-    const response = await api.get('/routers/classes/', { params });
+    const response = await api.get("/routers/classes/", { params });
     return response.data;
   },
 
@@ -283,15 +315,57 @@ export const classesApi = {
 
   // Create class
   createClass: async (classData: ClassCreateRequest): Promise<ClassItem> => {
-    const response = await api.post('/routers/classes/', classData);
+    const response = await api.post("/routers/classes/", classData);
     return response.data;
   },
 
   // Delete class
-  deleteClass: async (classId: number, confirm: boolean = false): Promise<{ message: string }> => {
+  deleteClass: async (
+    classId: number,
+    confirm: boolean = false
+  ): Promise<{ message: string }> => {
     const params = confirm ? { confirm: true } : {};
-    const response = await api.delete(`/routers/classes/${classId}`, { params });
+    const response = await api.delete(`/routers/classes/${classId}`, {
+      params,
+    });
     return response.data;
+  },
+
+  //Fetch students for a specific class
+  getStudents: async (classId: number): Promise<Student[]> => {
+    try {
+      const { data } = await api.get<Student[]>(
+        `/routers/students?class_id=${classId}`
+      );
+      return data;
+    } catch (error) {
+      console.error(
+        `[ClassesAPI] Error fetching students for class ${classId}:`,
+        error
+      );
+      return [];
+    }
+  },
+
+  //add a new student to a class
+  addStudent: async (
+    classId: number,
+    student: { name: string; roll_no: string; class_id?: number }
+  ): Promise<Student> => {
+    try {
+      const payload = { ...student, class_id: classId }; // make sure class_id is sent
+      const { data } = await api.post(
+        `/routers/classes/${classId}/students`,
+        payload
+      );
+      return data;
+    } catch (error: any) {
+      console.error(
+        `[ClassesAPI] Error adding student to class ${classId}:`,
+        error.response?.data || error
+      );
+      throw error;
+    }
   },
 };
 
@@ -300,7 +374,7 @@ export const teachersApi = {
   // Get all teachers
   getTeachers: async (schoolId?: number): Promise<Teacher[]> => {
     const params = schoolId ? { school_id: schoolId } : {};
-    const response = await api.get('/routers/teachers/', { params });
+    const response = await api.get("/routers/teachers/", { params });
     return response.data;
   },
 
@@ -311,8 +385,13 @@ export const teachersApi = {
   },
 
   // Assign teacher to class (class teacher)
-  assignTeacherToClass: async (classId: number, teacherId: number): Promise<{ detail: string }> => {
-    const response = await api.put(`/routers/teachers/classes/${classId}/assign/${teacherId}`);
+  assignTeacherToClass: async (
+    classId: number,
+    teacherId: number
+  ): Promise<{ detail: string }> => {
+    const response = await api.put(
+      `/routers/teachers/classes/${classId}/assign/${teacherId}`
+    );
     return response.data;
   },
 };
@@ -321,13 +400,13 @@ export const teachersApi = {
 export const subjectsApi = {
   // Get all subjects
   getSubjects: async (): Promise<Subject[]> => {
-    const response = await api.get('/routers/subjects/');
+    const response = await api.get("/routers/subjects/");
     return response.data;
   },
 
   // Create subject
   createSubject: async (name: string): Promise<Subject> => {
-    const response = await api.post('/routers/subjects/', { name });
+    const response = await api.post("/routers/subjects/", { name });
     return response.data;
   },
 
@@ -347,24 +426,36 @@ export const subjectsApi = {
 // Teacher Assignments API (for subject-teacher assignments within classes)
 export const teacherAssignmentsApi = {
   // Create teacher assignment (assign teacher to subject in a class)
-  createAssignment: async (classId: number, subjectId: number, teacherId: number): Promise<TeacherAssignment> => {
-    const response = await api.post('/routers/teacher_assignments/', {
+  createAssignment: async (
+    classId: number,
+    subjectId: number,
+    teacherId: number
+  ): Promise<TeacherAssignment> => {
+    const response = await api.post("/routers/teacher_assignments/", {
       teacher_id: teacherId,
       class_id: classId,
-      subject_id: subjectId
+      subject_id: subjectId,
     });
     return response.data;
   },
 
   // Get assignments for a class
-  getClassAssignments: async (classId: number): Promise<TeacherAssignment[]> => {
-    const response = await api.get(`/routers/teacher_assignments/class/${classId}`);
+  getClassAssignments: async (
+    classId: number
+  ): Promise<TeacherAssignment[]> => {
+    const response = await api.get(
+      `/routers/teacher_assignments/class/${classId}`
+    );
     return response.data;
   },
 
   // Delete assignment
-  deleteAssignment: async (assignmentId: number): Promise<{ message: string }> => {
-    const response = await api.delete(`/routers/teacher_assignments/${assignmentId}`);
+  deleteAssignment: async (
+    assignmentId: number
+  ): Promise<{ message: string }> => {
+    const response = await api.delete(
+      `/routers/teacher_assignments/${assignmentId}`
+    );
     return response.data;
   },
 };
