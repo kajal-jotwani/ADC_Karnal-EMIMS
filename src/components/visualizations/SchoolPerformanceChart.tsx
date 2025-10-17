@@ -1,72 +1,39 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { useData } from '../../contexts/DataContext';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts';
+import { SchoolComparison } from '../../types/api';
 
-interface SchoolData {
-  school: string;
-  averageScore: number;
-  studentCount: number;
-  mathAvg: number;
-  scienceAvg: number;
-  englishAvg: number;
+interface SchoolPerformanceChartProps {
+  data: SchoolComparison[];
 }
 
-const SchoolPerformanceChart: React.FC = () => {
-  const { studentData } = useData();
-
-  // Group students by school and calculate averages
-  const processSchoolData = (): SchoolData[] => {
-    const schoolGroups: { [key: string]: any[] } = {};
-    
-    // Group students by school
-    studentData.forEach(student => {
-      if (!schoolGroups[student.school]) {
-        schoolGroups[student.school] = [];
-      }
-      schoolGroups[student.school].push(student);
-    });
-
-    // Calculate averages for each school
-    return Object.entries(schoolGroups).map(([school, students]) => {
-      const mathScores = students.filter(s => s.math).map(s => s.math!);
-      const scienceScores = students.filter(s => s.science).map(s => s.science!);
-      const englishScores = students.filter(s => s.english).map(s => s.english!);
-
-      const mathAvg = mathScores.length > 0 ? mathScores.reduce((a, b) => a + b, 0) / mathScores.length : 0;
-      const scienceAvg = scienceScores.length > 0 ? scienceScores.reduce((a, b) => a + b, 0) / scienceScores.length : 0;
-      const englishAvg = englishScores.length > 0 ? englishScores.reduce((a, b) => a + b, 0) / englishScores.length : 0;
-
-      // Calculate overall average
-      const validAverages = [mathAvg, scienceAvg, englishAvg].filter(avg => avg > 0);
-      const overallAverage = validAverages.length > 0 ? validAverages.reduce((a, b) => a + b, 0) / validAverages.length : 0;
-
-      return {
-        school: school.length > 20 ? school.substring(0, 20) + '...' : school,
-        averageScore: Math.round(overallAverage),
-        studentCount: students.length,
-        mathAvg: Math.round(mathAvg),
-        scienceAvg: Math.round(scienceAvg),
-        englishAvg: Math.round(englishAvg)
-      };
-    }).sort((a, b) => b.averageScore - a.averageScore);
-  };
-
-  const schoolData = processSchoolData();
+const SchoolPerformanceChart: React.FC<SchoolPerformanceChartProps> = ({ data }) => {
+  // Transform data for display
+  const chartData = data.map(school => ({
+    ...school,
+    displayName: school.school.length > 25 ? school.school.substring(0, 25) + '...' : school.school,
+  }));
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
-      const data = schoolData.find(d => d.school === label);
+      const schoolData = data.find(d => 
+        (d.school.length > 25 ? d.school.substring(0, 25) + '...' : d.school) === label
+      );
+      
+      if (!schoolData) return null;
+
       return (
         <div className="bg-white p-4 border border-gray-200 shadow-md rounded-md">
-          <p className="font-medium text-gray-900 mb-2">{label}</p>
-          <p className="text-sm text-gray-600 mb-2">Students: {data?.studentCount}</p>
+          <p className="font-medium text-gray-900 mb-2">{schoolData.school}</p>
+          <p className="text-sm text-gray-600 mb-2">Students: {schoolData.studentCount}</p>
           <div className="space-y-1">
-            <p className="text-sm text-blue-600">Math: {data?.mathAvg}%</p>
-            <p className="text-sm text-green-600">Science: {data?.scienceAvg}%</p>
-            <p className="text-sm text-purple-600">English: {data?.englishAvg}%</p>
+            {Object.entries(schoolData.subjects || {}).map(([subject, score]) => (
+              <p key={subject} className="text-sm" style={{ color: getSubjectColor(subject) }}>
+                {subject}: {score}%
+              </p>
+            ))}
             <hr className="my-2" />
             <p className="text-sm font-medium text-gray-900">
-              Overall Average: {data?.averageScore}%
+              Overall Average: {schoolData.averageScore}%
             </p>
           </div>
         </div>
@@ -75,12 +42,44 @@ const SchoolPerformanceChart: React.FC = () => {
     return null;
   };
 
+  const getSubjectColor = (subject: string): string => {
+    const colors: { [key: string]: string } = {
+      Math: '#3B82F6',
+      Science: '#10B981',
+      English: '#8B5CF6',
+      Hindi: '#F59E0B',
+      'Social Science': '#EF4444',
+      History: '#EC4899',
+      Geography: '#14B8A6',
+      Physics: '#6366F1',
+      Chemistry: '#84CC16',
+      Biology: '#22D3EE',
+    };
+    return colors[subject] || '#6B7280';
+  };
+
   const getBarColor = (score: number) => {
     if (score >= 85) return '#10B981'; // Green
     if (score >= 75) return '#3B82F6'; // Blue
     if (score >= 65) return '#F59E0B'; // Yellow
     return '#EF4444'; // Red
   };
+
+  if (!data || data.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="mb-6">
+          <h3 className="text-xl font-heading font-semibold text-gray-900">
+            Average Score per School
+          </h3>
+          <p className="text-sm text-gray-600">Overall performance comparison across schools</p>
+        </div>
+        <div className="text-center py-12 text-gray-500">
+          No school comparison data available
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -91,20 +90,82 @@ const SchoolPerformanceChart: React.FC = () => {
         <p className="text-sm text-gray-600">Overall performance comparison across schools</p>
       </div>
 
+      {/* Summary Table */}
+      <div className="mb-8 overflow-x-auto">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                School
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Students
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Average Score
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Subject Breakdown
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {data.map((school, idx) => (
+              <tr key={idx} className="hover:bg-gray-50">
+                <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                  {school.school}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {school.studentCount}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <span 
+                    className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
+                    style={{
+                      backgroundColor: `${getBarColor(school.averageScore)}20`,
+                      color: getBarColor(school.averageScore)
+                    }}
+                  >
+                    {school.averageScore}%
+                  </span>
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  <div className="flex flex-wrap gap-2">
+                    {Object.entries(school.subjects || {}).map(([subject, score]) => (
+                      <span 
+                        key={subject}
+                        className="inline-flex items-center px-2 py-0.5 rounded text-xs"
+                        style={{
+                          backgroundColor: `${getSubjectColor(subject)}20`,
+                          color: getSubjectColor(subject)
+                        }}
+                      >
+                        {subject}: {score}%
+                      </span>
+                    ))}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Bar Chart */}
       <div className="h-96">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
-            data={schoolData}
-            margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            data={chartData}
+            margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
           >
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis 
-              dataKey="school" 
+              dataKey="displayName" 
               tick={{ fontSize: 11 }}
               tickLine={false}
               angle={-45}
               textAnchor="end"
-              height={80}
+              height={100}
             />
             <YAxis 
               tickLine={false}
@@ -117,10 +178,12 @@ const SchoolPerformanceChart: React.FC = () => {
               dataKey="averageScore" 
               name="Average Score"
               radius={[4, 4, 0, 0]}
-              fill={(entry: any) => getBarColor(entry.averageScore)}
             >
-              {schoolData.map((entry, index) => (
-                <Bar key={`cell-${index}`} fill={getBarColor(entry.averageScore)} />
+              {chartData.map((entry, index) => (
+                <Bar 
+                  key={`cell-${index}`} 
+                  fill={getBarColor(entry.averageScore)} 
+                />
               ))}
             </Bar>
           </BarChart>
@@ -128,7 +191,7 @@ const SchoolPerformanceChart: React.FC = () => {
       </div>
 
       {/* Performance Legend */}
-      <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
+      <div className="mt-6 flex items-center justify-center flex-wrap gap-4 text-sm">
         <div className="flex items-center">
           <div className="w-3 h-3 bg-green-500 rounded mr-2"></div>
           <span>Excellent (85%+)</span>
