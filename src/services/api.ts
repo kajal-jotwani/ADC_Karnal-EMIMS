@@ -17,6 +17,9 @@ import {
   StudentProgress,
   ClassPerformance,
   SchoolDetail,
+  AttendanceCreate,
+  AttendanceResponse,
+  AttendanceSummary,
 } from "../types/api";
 
 const API_BASE_URL =
@@ -474,3 +477,53 @@ export const teacherAssignmentsApi = {
 };
 
 export default api;
+
+// Attendance API services
+export const attendanceAPI = {
+  // Mark attendance for multiple students
+  markAttendance: async (
+    attendanceData: AttendanceCreate[]
+  ): Promise<AttendanceResponse[]> => {
+    try {
+      const { data } = await api.post<AttendanceResponse[]>(
+        "/routers/attendance/",
+        attendanceData
+      );
+      return data;
+    } catch (error: any) {
+      console.error("[AttendanceAPI] Error marking attendance:", error);
+      throw error;
+    }
+  },
+
+  // Get attendance for a class on a specific date
+  getClassAttendance: async (
+    classId: number,
+    date: string
+  ): Promise<AttendanceResponse[]> => {
+    try {
+      const { data } = await api.get<AttendanceResponse[]>(
+        `/routers/attendance/class/${classId}/date/${date}`
+      );
+      return data;
+    } catch (error: any) {
+      console.error("[AttendanceAPI] Error fetching class attendance:", error);
+      return [];
+    }
+  },
+
+  // Get student attendance summary
+  getStudentSummary: async (
+    studentId: number
+  ): Promise<AttendanceSummary | null> => {
+    try {
+      const { data } = await api.get<AttendanceSummary>(
+        `/routers/attendance/student/${studentId}/summary`
+      );
+      return data;
+    } catch (error: any) {
+      console.error("[AttendanceAPI] Error fetching student summary:", error);
+      return null;
+    }
+  },
+};

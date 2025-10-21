@@ -167,3 +167,34 @@ export interface Student {
   class_name?: string;
   date_enrolled?: string;
 }
+
+export interface AttendanceRecord {
+  id?: number;
+  student_id: number;
+  student_name: string;
+  is_present: boolean;
+  date: string;
+}
+
+export interface AttendanceCreate {
+  student_id: number;
+  class_id: number;
+  date: string;
+  is_present: boolean;
+}
+
+export interface AttendanceResponse {
+  id: number;
+  student_id: number;
+  student_name: string;
+  is_present: boolean;
+  date: string;
+}
+
+export interface AttendanceSummary {
+  student_id: number;
+  student_name: string;
+  total_days: number;
+  present_days: number;
+  attendance_percentage: number;
+}
