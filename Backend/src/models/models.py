@@ -233,7 +233,6 @@ class MarksCreate(SQLModel):
 
 class AttendanceCreate(SQLModel):
     student_id: int
-    teacher_id: int
     class_id: int
     date: date
     is_present: bool
