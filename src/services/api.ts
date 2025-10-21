@@ -367,6 +367,19 @@ export const classesApi = {
       throw error;
     }
   },
+  //Delete a student
+  deleteStudent: async (studentId: number): Promise<{ message: string }> => {
+    try {
+      const { data } = await api.delete(`/routers/students/${studentId}`);
+      return data;
+    } catch (error: any) {
+      console.error(
+        `[ClassesAPI] Error deleting student ${studentId}:`,
+        error.response?.data || error
+      );
+      throw error;
+    }
+  },
 };
 
 // Teachers API
