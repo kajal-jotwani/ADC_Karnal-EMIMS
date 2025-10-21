@@ -248,7 +248,6 @@ class ExamCreate(SQLModel):
     name: str
     subject_id: int
     class_id: int
-    teacher_id: int
     exam_type: ExamType = ExamType.CUSTOM
     max_marks: float = 100.0
     exam_date: Optional[date] = None
