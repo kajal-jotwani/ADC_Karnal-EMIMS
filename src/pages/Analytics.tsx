@@ -4,25 +4,7 @@ import SubjectScoresByClass from "../components/visualizations/SubjectScoresByCl
 import SchoolPerformanceChart from "../components/visualizations/SchoolPerformanceChart";
 import ExportButton from "../components/shared/ExportButton";
 import { BarChart3, TrendingUp, Users, AlertCircle } from "lucide-react";
-
-interface ClassPerformance {
-  class_id: number;
-  class: string;
-  studentCount: number;
-  subjects: {
-    [subjectName: string]: number;
-  };
-}
-
-interface SchoolComparison {
-  school_id: number;
-  school: string;
-  averageScore: number;
-  studentCount: number;
-  subjects: {
-    [subjectName: string]: number;
-  };
-}
+import { ClassPerformance, SchoolComparison } from "../types/api";
 
 const Analytics: React.FC = () => {
   const [classPerformance, setClassPerformance] = useState<ClassPerformance[]>([]);
@@ -145,7 +127,7 @@ const Analytics: React.FC = () => {
             <div className="ml-4">
               <h3 className="text-lg font-medium text-gray-900">Total Students</h3>
               <p className="text-sm text-gray-600">
-                {classPerformance.reduce((sum, cls) => sum + cls.studentCount, 0)} students tracked
+                {classPerformance.reduce((sum, cls) => sum + cls.student_count, 0)} students tracked
               </p>
             </div>
           </div>
