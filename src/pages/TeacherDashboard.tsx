@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { Users, BookOpen, Plus } from "lucide-react";
+import { Users, BookOpen, Plus, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { classesApi } from "../services/api";
 
@@ -25,7 +25,7 @@ interface Subject {
 interface ClassItem {
   id: number;
   name: string;
-  grade: number;
+  grade: string | number;
   section: string;
   subjects?: Subject[];
 }
@@ -91,16 +91,21 @@ const TeacherDashboard: React.FC = () => {
 
       reset();
     } catch (error: any) {
-      console.error("[TeacherDashboard] Error adding student:", error.response?.data || error);
+      console.error(
+        "[TeacherDashboard] Error adding student:",
+        error.response?.data || error
+      );
       alert(error.response?.data?.detail || "Failed to add student");
     }
   };
 
   return (
     <div className="fade-in">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Teacher Dashboard</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-4">
+        Teacher Dashboard
+      </h1>
       <p className="text-gray-600 mb-6">
-        Welcome {user.name}, here are your classes:
+        Welcome {user.first_name}, here are your classes:
       </p>
 
       {classes.length === 0 ? (
@@ -143,11 +148,34 @@ const TeacherDashboard: React.FC = () => {
                   {students[cls.id].map((stu) => (
                     <div
                       key={stu.id}
-                      className="p-3 bg-gray-50 rounded-lg flex justify-between"
+                      className="p-3 bg-gray-50 rounded-lg flex justify-between items-center"
                     >
                       <span className="font-medium text-gray-800">
                         {stu.roll_no} - {stu.name}
                       </span>
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Delete student ${stu.name}?`)) {
+                            try {
+                              await classesApi.deleteStudent(stu.id);
+                              setStudents((prev) => ({
+                                ...prev,
+                                [cls.id]: prev[cls.id].filter(
+                                  (s) => s.id !== stu.id
+                                ),
+                              }));
+                            } catch (error: any) {
+                              alert(
+                                error.response?.data?.detail ||
+                                  "Failed to delete student"
+                              );
+                            }
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        <Trash size={18} strokeWidth={2} />
+                      </button>
                     </div>
                   ))}
                 </div>
