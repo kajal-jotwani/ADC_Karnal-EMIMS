@@ -21,6 +21,7 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import Analytics from './pages/Analytics';
 import DailyAttendance from './pages/DailyAttendance';
+import ExamMarks from './pages/ExamMarks';
 
 const AppRoutes: React.FC = () => {
   const { isAuthenticated } = useAuth();
@@ -76,6 +77,11 @@ const AppRoutes: React.FC = () => {
         <Route path="daily-attendance" element={
           <ProtectedRoute requiredRoles={['teacher']}>
             <DailyAttendance />
+          </ProtectedRoute>
+        } />
+        <Route path="exam-marks" element={
+          <ProtectedRoute requiredRoles={['teacher']}>
+            <ExamMarks />
           </ProtectedRoute>
         } />
         <Route path="reports" element={
