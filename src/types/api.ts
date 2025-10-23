@@ -153,6 +153,15 @@ export interface TeacherAssignmentCreate {
   class_id: number;
   subject_id: number;
 }
+export interface TeacherAssignmentResponse {
+  assignment_id: number;
+  class_id: number;
+  class_name: string;
+  grade?: string | null;
+  section?: string | null;
+  subject_id: number;
+  subject_name: string;
+}
 
 // Extended Class with Assignments
 export interface ClassWithAssignments extends ClassItem {
@@ -197,4 +206,53 @@ export interface AttendanceSummary {
   total_days: number;
   present_days: number;
   attendance_percentage: number;
+}
+
+// Exam Types
+export interface Exam {
+  id: number;
+  name: string;
+  subject_id: number;
+  subject_name: string;
+  class_id: number;
+  class_name: string;
+  teacher_id: number;
+  exam_type: string;
+  max_marks: number;
+  exam_date: string | null;
+  created_at: string;
+}
+
+export interface ExamCreate {
+  name: string;
+  subject_id: number;
+  class_id: number;
+  exam_type?: string;
+  max_marks: number;
+  exam_date?: string;
+}
+
+export interface ExamMarks {
+  id: number;
+  exam_id: number;
+  student_id: number;
+  student_name: string;
+  roll_number: string;
+  marks_obtained: number;
+}
+
+export interface ExamMarksCreate {
+  exam_id: number;
+  student_id: number;
+  marks_obtained: number;
+}
+
+export interface StudentPerformance {
+  exam_name: string;
+  subject_name: string;
+  marks_obtained: number;
+  max_marks: number;
+  exam_date: string;
+  percentage: number;
+  created_at: string;
 }
