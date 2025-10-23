@@ -20,6 +20,12 @@ import {
   AttendanceCreate,
   AttendanceResponse,
   AttendanceSummary,
+  ExamCreate,
+  Exam,
+  ExamMarksCreate,
+  ExamMarks,
+  StudentPerformance,
+  TeacherAssignmentResponse,
 } from "../types/api";
 
 const API_BASE_URL =
@@ -474,9 +480,126 @@ export const teacherAssignmentsApi = {
     );
     return response.data;
   },
+
+  // Get current teacher's subjects and classes (NEW - recommended)
+  getMySubjectsAndClasses: async (): Promise<TeacherAssignmentResponse[]> => {
+    try {
+      const { data } = await api.get<TeacherAssignmentResponse[]>(
+        "/routers/teacher_assignments/me/subjects"
+      );
+      return data || [];
+    } catch (error: any) {
+      console.error(
+        "[TeacherAssignmentsAPI] Error fetching my subjects/classes:",
+        error
+      );
+      // If 404, teacher profile doesn't exist
+      if (error.response?.status === 404) {
+        console.error("Teacher profile not found in database");
+      }
+      return [];
+    }
+  },
+
+  // Get subjects and classes for a specific teacher ID (for principals/admins)
+  getSubjectsAndClasses: async (
+    teacher_id: number
+  ): Promise<TeacherAssignmentResponse[]> => {
+    try {
+      const { data } = await api.get<TeacherAssignmentResponse[]>(
+        `/routers/teacher_assignments/${teacher_id}/subjects`
+      );
+      return data || [];
+    } catch (error: any) {
+      console.error(
+        "[TeacherAssignmentsAPI] Error fetching teacher subjects/classes:",
+        error
+      );
+      // If 404, teacher with that ID doesn't exist
+      if (error.response?.status === 404) {
+        console.error(`Teacher with ID ${teacher_id} not found in database`);
+      }
+      return [];
+    }
+  },
 };
 
-export default api;
+
+export const examsAPI = {
+  // Create exam
+  createExam: async (examData: ExamCreate): Promise<Exam> => {
+    try {
+      const { data } = await api.post<Exam>("/routers/exams/", examData);
+      return data;
+    } catch (error: any) {
+      console.error("[ExamsAPI] Error creating exam:", error);
+      throw error;
+    }
+  },
+
+  // Get exams for a specific teacher
+  getTeacherExams: async (teacherId: number): Promise<Exam[]> => {
+    try {
+      const { data } = await api.get<Exam[]>(
+        `/routers/exams/teacher/${teacherId}`
+      );
+      return data;
+    } catch (error: any) {
+      console.error("[ExamsAPI] Error fetching teacher exams:", error);
+      return [];
+    }
+  },
+
+  // Get current teacher's exams
+  getMyExams: async (): Promise<Exam[]> => {
+    try {
+      const { data } = await api.get<Exam[]>("/routers/exams/me");
+      return data;
+    } catch (error: any) {
+      console.error("[ExamsAPI] Error fetching my exams:", error);
+      return [];
+    }
+  },
+
+  // Submit exam marks (bulk)
+  submitExamMarks: async (marksList: ExamMarksCreate[]): Promise<any[]> => {
+    try {
+      const { data } = await api.post("/routers/exams/marks", marksList);
+      return data;
+    } catch (error: any) {
+      console.error("[ExamsAPI] Error submitting exam marks:", error);
+      throw error;
+    }
+  },
+
+  // Get exam marks by exam ID
+  getExamMarks: async (examId: number): Promise<ExamMarks[]> => {
+    try {
+      const { data } = await api.get<ExamMarks[]>(
+        `/routers/exams/${examId}/marks`
+      );
+      return data;
+    } catch (error: any) {
+      console.error("[ExamsAPI] Error fetching exam marks:", error);
+      return [];
+    }
+  },
+
+  // Get student performance
+  getStudentPerformance: async (
+    studentId: number
+  ): Promise<StudentPerformance[]> => {
+    try {
+      const { data } = await api.get<StudentPerformance[]>(
+        `/routers/exams/student/${studentId}/performance`
+      );
+      return data;
+    } catch (error: any) {
+      console.error("[ExamsAPI] Error fetching student performance:", error);
+      return [];
+    }
+  },
+};
 
 // Attendance API services
 export const attendanceAPI = {
@@ -527,3 +650,5 @@ export const attendanceAPI = {
     }
   },
 };
+
+export default api;
