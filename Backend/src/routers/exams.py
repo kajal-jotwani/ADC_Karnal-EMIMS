@@ -16,7 +16,7 @@ router = APIRouter()
 async def get_current_teacher(current_user: User, session: AsyncSession) -> Teacher:
     if current_user.role != UserRole.TEACHER:
         raise HTTPException(status_code=403, detail="Only teachers can perform this action")
-    result = await session.exec(select(Teacher).where(Teacher.user_id == current_user.id))
+    result = await session.exec(select(Teacher).where(Teacher.email == current_user.email))
     teacher = result.first()
     if not teacher:
         raise HTTPException(status_code=404, detail="Teacher profile not found")
@@ -36,8 +36,10 @@ async def create_exam(
     if not class_ or class_.teacher_id != teacher.id:
         raise HTTPException(status_code=403, detail="You are not assigned to this class")
     
-    exam_data.teacher_id = teacher.id
-    db_exam  =Exam(**exam_data.model_dump())
+    # Create exam with teacher_id
+    exam_dict = exam_data.model_dump()
+    exam_dict['teacher_id'] = teacher.id
+    db_exam = Exam(**exam_dict)
     session.add(db_exam)
     await session.commit()
     await session.refresh(db_exam)
@@ -61,7 +63,7 @@ async def get_teacher_exams(
     session: AsyncSession = Depends(get_session),
     current_user: User = Depends(get_current_active_user)
 ):
-    #teacher or principle can access
+    #teacher or principal can access
     if current_user.role == UserRole.TEACHER:
         teacher = await get_current_teacher(current_user, session)
         if teacher.id != teacher_id:
@@ -72,12 +74,12 @@ async def get_teacher_exams(
             raise HTTPException(status_code=403, detail="You can only access exams from your school")
     
     exam_result = await session.exec(
-        select(Exam, Subject,Class)
+        select(Exam, Subject, Class)
         .join(Subject, Exam.subject_id == Subject.id)
         .join(Class, Exam.class_id == Class.id)
         .where(Exam.teacher_id == teacher_id)
     )
-    exam = exam_result.all()
+    exams = exam_result.all()
 
     return [
         {
@@ -89,7 +91,7 @@ async def get_teacher_exams(
             "exam_date": exam.exam_date,
             "created_at": exam.created_at
         }
-        for exam, subject, class_ in exam
+        for exam, subject, class_ in exams
     ]
 
 #get my exams
@@ -110,9 +112,9 @@ async def submit_exam_marks(
 ):
     teacher = await get_current_teacher(current_user, session)
     
-    Student_ids = [marks.student_id for marks in marks_list]
+    student_ids = [marks.student_id for marks in marks_list]
     students_result = await session.exec(
-        select(Student).where(Student.id.in_(Student_ids))
+        select(Student).where(Student.id.in_(student_ids))
     )
     students_map = {student.id: student for student in students_result.all()}   
 
@@ -166,7 +168,7 @@ async def get_exam_marks(
 ):
     
     exam = await session.get(Exam, exam_id)
-    if not exam :
+    if not exam:
         raise HTTPException(status_code=404, detail="Exam not found")
     
     if current_user.role == UserRole.TEACHER:
