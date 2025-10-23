@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
-from typing import List
+from typing import Any, Dict, List
 from pydantic import BaseModel
 
 from src.db.main import get_session
@@ -114,3 +114,63 @@ async def delete_assignment(
     await session.commit()
     
     return {"message": "Assignment deleted successfully"}
+
+#Get subjects assigned to a teacher
+@router.get("/{teacher_id}/subjects")
+async def get_teacher_subjects(
+    teacher_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_active_user)
+) -> List[Dict[str, Any]]:
+    
+    """
+    Get all subjects assigned by the principal to a specific teacher.
+    Returns class, subject, and related info.
+    """
+
+    # Fetch teacher
+    teacher = await session.get(Teacher, teacher_id)
+    if not teacher:
+        raise HTTPException(status_code=404, detail="Teacher not found")
+    
+    # Ensure principal is accessing within their school
+    if current_user.role == UserRole.PRINCIPAL and teacher.school_id != current_user.school_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # If a teacher is trying to view someone else's data — restrict
+    if current_user.role == UserRole.TEACHER:
+        teacher_self = await session.exec(select(Teacher).where(Teacher.email == current_user.email))
+        self_teacher = teacher_self.first()
+        if not self_teacher or self_teacher.id != teacher_id:
+            raise HTTPException(status_code=403, detail="Access denied")
+
+    # Query all assignments for this teacher
+    query = (
+        select(
+            TeacherAssignment,
+            Class,
+            Subject
+        )
+        .join(Class, Class.id == TeacherAssignment.class_id)
+        .join(Subject, Subject.id == TeacherAssignment.subject_id)
+        .where(TeacherAssignment.teacher_id == teacher_id)
+    )
+
+    result = await session.exec(query)
+    rows = result.all()
+
+    # Build a structured response
+    assignments = [
+        {
+            "assignment_id": assignment.id,
+            "class_id": class_.id,
+            "class_name": class_.name,
+            "grade": class_.grade,
+            "section": class_.section,
+            "subject_id": subject.id,
+            "subject_name": subject.name,
+        }
+        for assignment, class_, subject in rows
+    ]
+    
+    return assignments
