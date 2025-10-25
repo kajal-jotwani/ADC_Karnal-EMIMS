@@ -164,10 +164,10 @@ export const changePassword = async (
   currentPassword: string,
   newPassword: string
 ): Promise<{
-  success: any; message: string 
+  success: boolean; message: string
 }> => {
   try {
-    const { data } = await api.post<{ success: any; message: string }>("/auth/change-password", {
+    const { data } = await api.post<{ success: boolean; message: string }>("/auth/change-password", {
       current_password: currentPassword,
       new_password: newPassword,
     });
