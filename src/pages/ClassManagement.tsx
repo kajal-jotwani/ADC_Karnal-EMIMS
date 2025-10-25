@@ -356,7 +356,7 @@ const ClassManagement: React.FC = () => {
             <select
               className="select"
               value={selectedClass || ''}
-              onChange={(e) => setSelectedClass(e.target.value ? parseInt(e.target.value) : null)}
+              onChange={(e) => setSelectedClass(e.target.value ? parseInt(e.target.value, 10) : null)}
             >
               <option value="">Choose a class</option>
               {classes.map(cls => (
