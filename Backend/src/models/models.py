@@ -260,6 +260,8 @@ class ExamMarksCreate(SQLModel):
 class ExamResponse(SQLModel):
     id: int
     name: str
+    subject_id: int
+    class_id: int
     subject_name: str
     class_name: str
     max_marks: float
