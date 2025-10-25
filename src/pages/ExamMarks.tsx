@@ -248,6 +248,11 @@ const ExamMarks: React.FC = () => {
   const handleCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    
+    if (!selectedExam) {
+      setCsvUploadMessage("Error: No exam selected");
+      return;
+    }
 
     setCsvUploadMessage("Processing CSV...");
 
@@ -261,6 +266,8 @@ const ExamMarks: React.FC = () => {
           console.log("CSV parsed:", parsedData);
 
           let matchedCount = 0;
+          let invalidCount = 0;
+
           const updatedMarks = studentMarks.map((student) => {
             // Try to match by roll_no (trim whitespace)
             const csvRow = parsedData.find(
@@ -270,10 +277,20 @@ const ExamMarks: React.FC = () => {
             );
 
             if (csvRow && csvRow.marks_obtained !== undefined) {
+              // Convert to number, defaulting to 0 if NaN
+              const marks = Number(csvRow.marks_obtained);
+              
+              // Validate the marks are within bounds
+              if (isNaN(marks) || marks < 0 || marks > selectedExam.max_marks) {
+                invalidCount++;
+                console.warn(`Invalid marks for roll no ${student.roll_no}: ${csvRow.marks_obtained} (must be 0-${selectedExam.max_marks})`);
+                return student;
+              }
+              
               matchedCount++;
               return {
                 ...student,
-                marks_obtained: Number(csvRow.marks_obtained) || 0,
+                marks_obtained: marks,
               };
             }
             return student;
@@ -289,7 +306,9 @@ const ExamMarks: React.FC = () => {
           );
 
           setCsvUploadMessage(
-            `✓ CSV uploaded! Matched ${matchedCount} of ${studentMarks.length} students.`
+           `✓ CSV uploaded! Matched ${matchedCount} of ${studentMarks.length} students.${
+              invalidCount > 0 ? ` ${invalidCount} invalid marks skipped (must be 0-${selectedExam.max_marks}).` : ''
+            }`
           );
           setTimeout(() => setCsvUploadMessage(""), 5000);
         } catch (err) {
@@ -376,7 +395,7 @@ const ExamMarks: React.FC = () => {
       </div>
     );
   }
-  
+
   // Only allow teachers
   if (user?.role !== "teacher") {
     return (
