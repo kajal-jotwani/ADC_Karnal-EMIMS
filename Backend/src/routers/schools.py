@@ -5,23 +5,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.auth.models import User, UserRole
 from src.auth.dependencies import get_current_active_user, require_admin_or_principal, require_admin, require_principal
 from src.db.main import get_session
-from src.models.models import Class, Marks, School, District, SchoolCreate, Student, Subject, Teacher
-from pydantic import BaseModel
+from src.models.models import (
+    Class, Marks, School, District, SchoolCreate, Student, 
+    Subject, Teacher, SchoolDetailResponse
+)
 
 router = APIRouter()
-
-# Response model for school details
-class SchoolDetailResponse(BaseModel):
-    id: int
-    name: str
-    address: str | None
-    phone: str | None
-    email: str | None
-    district_id: int
-    stats: Dict[str, Any]
-    teachers: List[Dict[str, Any]]
-    classes: List[Dict[str, Any]]
-    subject_performance: List[Dict[str, Any]]
 
 # List all schools -> only district admin can view all schools 
 @router.get("/", response_model=List[School])
