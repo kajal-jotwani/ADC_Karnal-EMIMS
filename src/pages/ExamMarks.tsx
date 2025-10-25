@@ -78,22 +78,6 @@ const ExamMarks: React.FC = () => {
     resolver: zodResolver(marksSchema),
   });
 
-  // Only allow teachers
-  if (user?.role !== "teacher") {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">
-            Access Denied
-          </h2>
-          <p className="text-gray-600">
-            Only teachers can access exam marks entry.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   // Load teacher assignments (subjects and classes)
   useEffect(() => {
     const loadAssignments = async () => {
@@ -388,6 +372,22 @@ const ExamMarks: React.FC = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading exams...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Only allow teachers
+  if (user?.role !== "teacher") {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-600">
+            Only teachers can access exam marks entry.
+          </p>
         </div>
       </div>
     );
