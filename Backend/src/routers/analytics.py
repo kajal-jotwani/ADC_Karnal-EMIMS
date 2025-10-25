@@ -116,38 +116,63 @@ async def get_class_performance(
 # School comparison
 @router.get("/school-comparison")
 async def get_school_comparison(
-    current_user: User = Depends(require_admin),
+    current_user: User = Depends(get_current_active_user),
     session: AsyncSession = Depends(get_session)
 ) -> List[Dict[str, Any]]:
-    
     """Compare schools by avg score and per-subject averages"""
-    if current_user.role != UserRole.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    if current_user.role == UserRole.PRINCIPAL:
+        # Principal: show only their school
+        if current_user.school_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Principal user has no school assigned"
+            )
+        school_ids = [current_user.school_id]
+    elif current_user.role == UserRole.ADMIN:
+        # Admin: show all schools
+        school_ids = None
+    else:
+        raise HTTPException(status_code=403, detail="Access denied")
 
     # School stats
-    school_stats = dict(
-        (await session.exec(
-            select(Class.school_id, func.count(Student.id), func.avg(Marks.marks))
-            .join(Student, Student.class_id == Class.id)
-            .join(Marks, Marks.student_id == Student.id)
-            .group_by(Class.school_id)
-        )).all()
+    query = (
+        select(Class.school_id, func.count(Student.id), func.avg(Marks.marks))
+        .join(Student, Student.class_id == Class.id)
+        .join(Marks, Marks.student_id == Student.id)
     )
+    if school_ids:
+        query = query.where(Class.school_id.in_(school_ids))
 
-    # Subject stats
-    results = (await session.exec(
+    school_stats = {
+        school_id: (student_count, avg_score)
+        for school_id, student_count, avg_score in (await session.exec(
+            query.group_by(Class.school_id)
+        )).all()
+    }
+
+    # Subject averages
+    subj_query = (
         select(Class.school_id, Subject.name, func.avg(Marks.marks))
         .join(Student, Student.class_id == Class.id)
         .join(Marks, Marks.student_id == Student.id)
         .join(Subject, Marks.subject_id == Subject.id)
-        .group_by(Class.school_id, Subject.name)
-    )).all()
+    )
+    if school_ids:
+        subj_query = subj_query.where(Class.school_id.in_(school_ids))
+
+    results = (await session.exec(subj_query.group_by(Class.school_id, Subject.name))).all()
 
     subject_avgs = {}
     for school_id, subj_name, avg in results:
         subject_avgs.setdefault(school_id, {})[subj_name] = round(avg or 0, 1)
 
-    schools = (await session.exec(select(School))).all()
+    # Fetch only relevant schools
+    school_query = select(School)
+    if school_ids:
+        school_query = school_query.where(School.id.in_(school_ids))
+
+    schools = (await session.exec(school_query)).all()
 
     response = []
     for school in schools:

@@ -13,7 +13,9 @@ import {
   Settings,
   X,
   HelpCircle,
-  GraduationCap
+  GraduationCap,
+  Calendar,
+  FileText
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -77,6 +79,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
       return [
         ...baseItems,
         { to: '/teacher-dashboard', icon: <GraduationCap size={20} />, label: 'My Classes', roles: ['teacher'] },
+        { to: '/daily-attendance', icon: <Calendar size={20} />, label: 'Daily Attendance', roles: ['teacher'] },
+        { to: '/exam-marks', icon: <FileText size={20} />, label: 'Exam & Marks', roles: ['teacher'] },
         { to: '/students', icon: <Users size={20} />, label: 'Students', roles: ['teacher'] },
       ];
     }
@@ -138,11 +142,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, toggleSidebar }) => {
                 <h4 className="text-sm font-medium text-primary-700">Need help?</h4>
               </div>
               <p className="text-xs text-primary-600 mb-3">
-                Check our documentation or contact support for assistance.
+                Check our User Guide or contact support for assistance.
               </p>
-              <button className="text-xs bg-white text-primary-700 hover:bg-primary-700 hover:text-white px-3 py-1.5 rounded border border-primary-300 transition-colors duration-150 w-full">
-                View Documentation
-              </button>
+              <a href='https://github.com/kajal-jotwani/ADC_Karnal-EMIMS/blob/main/docs/User%20Guide.pdf' target="_blank" rel="noopener noreferrer"
+              className="text-xs bg-white text-primary-700 hover:bg-primary-700 hover:text-white px-3 py-1.5 rounded border border-primary-300 transition-colors duration-150 w-full">
+                User Guide
+              </a>
             </div>
           </div>
         </div>

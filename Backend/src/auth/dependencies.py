@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 from typing import Optional
 import uuid
 
@@ -45,8 +46,14 @@ async def get_current_user(
     except(HTTPException, ValueError):
         raise credentials_exception
     
-    #fetch the user from the database
-    user = await session.get(User, user_id)
+    # Fetch the user with eager loading of school relationship
+    result = await session.exec(
+        select(User)
+        .where(User.id == user_id)
+        .options(selectinload(User.school))
+    )
+    user = result.first()
+    
     if user is None:
         raise credentials_exception
     
@@ -128,9 +135,15 @@ async def verify_refresh_token(
                 detail="Invalid refresh token",    
             )
         
-        #get assosiated user
-        user = await session.get(User, user_id)
-        if user is None or not user.is_active or user.is_deleted:
+        #get associated user with eager loading
+        user_result = await session.exec(
+            select(User)
+            .where(User.id == user_id)
+            .options(selectinload(User.school))
+        )
+        user = user_result.first()
+        
+        if user is None or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",    
@@ -144,6 +157,3 @@ async def verify_refresh_token(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",    
         )
-    
-
-

@@ -53,7 +53,7 @@ const Header: React.FC<HeaderProps> = ({ toggleSidebar }) => {
                 </div>
                 <div className="hidden md:block">
                   <div className="text-sm font-medium">
-                    {user?.firstName && user?.lastName ? `${user?.firstName} ${user?.lastName}` : "User"}
+                    {user?.first_name && user?.last_name ? `${user?.first_name} ${user?.last_name}` : "User"}
                   </div>
                   <div className="text-xs text-gray-500 capitalize">
                     {user?.role || "Role"}

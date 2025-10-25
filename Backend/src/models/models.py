@@ -1,7 +1,7 @@
 from email.policy import default
 from sqlmodel import SQLModel, Field, Relationship
 from sqlalchemy import ForeignKey
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from datetime import datetime, date
 from enum import Enum
 
@@ -197,7 +197,7 @@ class ClassCreate(SQLModel):
     grade: str
     section: str
     school_id: int
-    teacher_id: int
+    teacher_id: Optional[int] = None
 
 class ClassResponse(SQLModel):
     id: int
@@ -233,7 +233,6 @@ class MarksCreate(SQLModel):
 
 class AttendanceCreate(SQLModel):
     student_id: int
-    teacher_id: int
     class_id: int
     date: date
     is_present: bool
@@ -249,7 +248,6 @@ class ExamCreate(SQLModel):
     name: str
     subject_id: int
     class_id: int
-    teacher_id: int
     exam_type: ExamType = ExamType.CUSTOM
     max_marks: float = 100.0
     exam_date: Optional[date] = None
@@ -262,6 +260,8 @@ class ExamMarksCreate(SQLModel):
 class ExamResponse(SQLModel):
     id: int
     name: str
+    subject_id: int
+    class_id: int
     subject_name: str
     class_name: str
     max_marks: float
@@ -280,3 +280,15 @@ class SubjectCreate(SQLModel):
 
 class SubjectUpdate(SQLModel):
     name: Optional[str] = None
+
+class SchoolDetailResponse(SQLModel):
+    id: int
+    name: str
+    address: str | None
+    phone: str | None
+    email: str | None
+    district_id: int
+    stats: Dict[str, Any]
+    teachers: List[Dict[str, Any]]
+    classes: List[Dict[str, Any]]
+    subject_performance: List[Dict[str, Any]]

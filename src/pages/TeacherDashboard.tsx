@@ -1,83 +1,138 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { useSchool } from "../contexts/SchoolContext";
-import { Users, BookOpen, Plus } from "lucide-react";
+import { Users, BookOpen, Plus, Trash } from "lucide-react";
 import { useForm } from "react-hook-form";
+import { classesApi } from "../services/api";
 
 interface StudentForm {
   name: string;
   rollNo: string;
 }
 
-export interface Class {
-  id: string;
+interface Student {
+  id: number;
   name: string;
-  grade: number;
+  roll_no: string;
+  class_id: number;
+}
+
+interface Subject {
+  id: number;
+  subjectName: string;
+  teacherId: number;
+}
+
+interface ClassItem {
+  id: number;
+  name: string;
+  grade: string | number;
   section: string;
-  subjects: Subject[];
-  students: Student[]; 
+  subjects?: Subject[];
 }
 
 const TeacherDashboard: React.FC = () => {
   const { user } = useAuth();
-  const { classes, addStudentToClass, classStudents } = useSchool();
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
-
+  const [classes, setClasses] = useState<ClassItem[]>([]);
+  const [students, setStudents] = useState<Record<number, Student[]>>({});
+  const [selectedClass, setSelectedClass] = useState<number | null>(null);
   const { register, handleSubmit, reset } = useForm<StudentForm>();
 
+  // Only allow teacher access
   if (user?.role !== "teacher") {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Access Denied</h2>
-          <p className="text-gray-600">Only teachers can access this dashboard.</p>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Access Denied
+          </h2>
+          <p className="text-gray-600">
+            Only teachers can access this dashboard.
+          </p>
         </div>
       </div>
     );
   }
 
-  // filter only classes where this teacher is assigned
-  const assignedClasses = classes.filter(cls =>
-    cls.subjects.some(subject => subject.teacherId === user.id)
-  );
+  // Fetch all classes assigned to this teacher
+  useEffect(() => {
+    const fetchClassesAndStudents = async () => {
+      try {
+        const fetchedClasses = await classesApi.getClasses();
+        setClasses(fetchedClasses);
 
-  const onAddStudent = (data: StudentForm) => {
+        const studentData: Record<number, Student[]> = {};
+        for (const cls of fetchedClasses) {
+          studentData[cls.id] = await classesApi.getStudents(cls.id);
+        }
+        setStudents(studentData);
+      } catch (error) {
+        console.error("[TeacherDashboard] Error fetching data:", error);
+      }
+    };
+
+    fetchClassesAndStudents();
+  }, []);
+
+  // Add student
+  const onAddStudent = async (data: StudentForm) => {
     if (!selectedClass) return;
-    addStudentToClass({
-      classId: selectedClass,
-      name: data.name,
-      rollNo: data.rollNo,
-    });
-    reset();
-  };
+    try {
+      const newStudent = await classesApi.addStudent(selectedClass, {
+        name: data.name,
+        roll_no: data.rollNo,
+        class_id: selectedClass,
+      });
 
-  const getStudentsForClass = (classId: string) =>
-    classStudents.filter(stu => stu.classId === classId);
+      // update students list locally
+      setStudents((prev) => ({
+        ...prev,
+        [selectedClass]: [...(prev[selectedClass] || []), newStudent],
+      }));
+
+      reset();
+    } catch (error: any) {
+      console.error(
+        "[TeacherDashboard] Error adding student:",
+        error.response?.data || error
+      );
+      alert(error.response?.data?.detail || "Failed to add student");
+    }
+  };
 
   return (
     <div className="fade-in">
-      <h1 className="text-2xl font-bold text-gray-900 mb-4">Teacher Dashboard</h1>
-      <p className="text-gray-600 mb-6">Welcome {user.name}, here are your classes:</p>
+      <h1 className="text-2xl font-bold text-gray-900 mb-4">
+        Teacher Dashboard
+      </h1>
+      <p className="text-gray-600 mb-6">
+        Welcome {user.first_name}, here are your classes:
+      </p>
 
-      {assignedClasses.length === 0 ? (
+      {classes.length === 0 ? (
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <BookOpen size={48} className="mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No Classes Assigned</h3>
-          <p className="text-gray-600">Please wait until the principal assigns you to a class.</p>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            No Classes Assigned
+          </h3>
+          <p className="text-gray-600">
+            Please wait until the principal assigns you to a class.
+          </p>
         </div>
       ) : (
-        assignedClasses.map(cls => (
+        classes.map((cls) => (
           <div key={cls.id} className="bg-white rounded-lg shadow-md p-6 mb-6">
             <h2 className="text-lg font-semibold text-gray-900">
               {cls.name} (Grade {cls.grade} • Section {cls.section})
             </h2>
 
             <div className="mt-3">
-              <h3 className="font-medium text-gray-700 mb-2">Subjects Assigned:</h3>
+              <h3 className="font-medium text-gray-700 mb-2">
+                Subjects Assigned:
+              </h3>
               <ul className="list-disc ml-6 text-gray-600">
-                {cls.subjects
-                  .filter(sub => sub.teacherId === user.id)
-                  .map(sub => (
+                {(cls.subjects || [])
+                  .filter((sub) => sub.teacherId === user.id)
+                  .map((sub) => (
                     <li key={sub.id}>{sub.subjectName}</li>
                   ))}
               </ul>
@@ -88,16 +143,39 @@ const TeacherDashboard: React.FC = () => {
               <h3 className="font-medium text-gray-700 mb-2 flex items-center">
                 <Users size={16} className="mr-2" /> Students
               </h3>
-              {getStudentsForClass(cls.id).length > 0 ? (
+              {students[cls.id]?.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {getStudentsForClass(cls.id).map(stu => (
+                  {students[cls.id].map((stu) => (
                     <div
                       key={stu.id}
-                      className="p-3 bg-gray-50 rounded-lg flex justify-between"
+                      className="p-3 bg-gray-50 rounded-lg flex justify-between items-center"
                     >
                       <span className="font-medium text-gray-800">
-                        {stu.rollNumber} - {stu.name}
+                        {stu.roll_no} - {stu.name}
                       </span>
+                      <button
+                        onClick={async () => {
+                          if (confirm(`Delete student ${stu.name}?`)) {
+                            try {
+                              await classesApi.deleteStudent(stu.id);
+                              setStudents((prev) => ({
+                                ...prev,
+                                [cls.id]: prev[cls.id].filter(
+                                  (s) => s.id !== stu.id
+                                ),
+                              }));
+                            } catch (error: any) {
+                              alert(
+                                error.response?.data?.detail ||
+                                  "Failed to delete student"
+                              );
+                            }
+                          }
+                        }}
+                        className="text-red-500 hover:text-red-700 text-sm font-medium"
+                      >
+                        <Trash size={18} strokeWidth={2} />
+                      </button>
                     </div>
                   ))}
                 </div>
