@@ -181,7 +181,7 @@ class AuthService:
         
         #get user 
         user = await self.session.get(User, user_id)
-        if not user or not user.is_active or user.is_deleted:
+        if not user or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found or inactive"

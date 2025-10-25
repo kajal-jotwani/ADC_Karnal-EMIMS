@@ -143,7 +143,7 @@ async def verify_refresh_token(
         )
         user = user_result.first()
         
-        if user is None or not user.is_active or user.is_deleted:
+        if user is None or not user.is_active:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Could not validate credentials",    
