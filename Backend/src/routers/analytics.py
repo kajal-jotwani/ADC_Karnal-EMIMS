@@ -123,6 +123,11 @@ async def get_school_comparison(
     
     if current_user.role == UserRole.PRINCIPAL:
         # Principal: show only their school
+        if current_user.school_id is None:
+            raise HTTPException(
+                status_code=400,
+                detail="Principal user has no school assigned"
+            )
         school_ids = [current_user.school_id]
     elif current_user.role == UserRole.ADMIN:
         # Admin: show all schools
