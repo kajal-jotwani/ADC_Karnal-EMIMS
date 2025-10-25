@@ -4,7 +4,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import Papa from "papaparse";
-import { BookOpen, Plus, Save, FileText, Award, Download, Upload } from "lucide-react";
+import {
+  BookOpen,
+  Plus,
+  Save,
+  FileText,
+  Award,
+  Download,
+  Upload,
+} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -95,9 +103,11 @@ const ExamMarks: React.FC = () => {
         const data = await teacherAssignmentsApi.getMySubjectsAndClasses();
         console.log("Teacher assignments loaded:", data);
         setTeacherAssignments(data);
-        
+
         if (data.length === 0) {
-          setSubmitMessage("No subjects/classes assigned. Please contact your principal.");
+          setSubmitMessage(
+            "No subjects/classes assigned. Please contact your principal."
+          );
         }
       } catch (error: any) {
         console.error("Error loading assignments:", error);
@@ -147,7 +157,8 @@ const ExamMarks: React.FC = () => {
       setTimeout(() => setSubmitMessage(""), 3000);
     } catch (error: any) {
       console.error("Error creating exam:", error);
-      const errorMsg = error.response?.data?.detail || error.message || "Error creating exam.";
+      const errorMsg =
+        error.response?.data?.detail || error.message || "Error creating exam.";
       setSubmitMessage(errorMsg);
       setTimeout(() => setSubmitMessage(""), 5000);
     } finally {
@@ -208,19 +219,40 @@ const ExamMarks: React.FC = () => {
   const onSubmitMarks = async (data: MarksForm) => {
     if (!selectedExam) return;
     setIsSubmitting(true);
+
     try {
+      for (const m of data.marks) {
+        const value = Number(m.marks_obtained);
+
+        // Basic validation
+        if (
+          !Number.isFinite(value) ||
+          value < 0 ||
+          value > selectedExam.max_marks
+        ) {
+          setSubmitMessage(
+            `Marks must be between 0 and ${selectedExam.max_marks} for student ${m.student_id}`
+          );
+          setIsSubmitting(false);
+          return; // Stop submission early
+        }
+      }
+
+      // Build validated data only after checks
       const marksData: ExamMarksCreate[] = data.marks.map((m) => ({
         exam_id: selectedExam.id,
         student_id: parseInt(m.student_id),
-        marks_obtained: m.marks_obtained,
+        marks_obtained: Number(m.marks_obtained),
       }));
+
       console.log("Submitting marks:", marksData);
       await examsAPI.submitExamMarks(marksData);
       setSubmitMessage("Marks saved successfully!");
       setTimeout(() => setSubmitMessage(""), 3000);
     } catch (error: any) {
       console.error("Error saving marks:", error);
-      const errorMsg = error.response?.data?.detail || error.message || "Error saving marks.";
+      const errorMsg =
+        error.response?.data?.detail || error.message || "Error saving marks.";
       setSubmitMessage(errorMsg);
       setTimeout(() => setSubmitMessage(""), 5000);
     } finally {
@@ -234,7 +266,7 @@ const ExamMarks: React.FC = () => {
     if (!file) return;
 
     setCsvUploadMessage("Processing CSV...");
-    
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
@@ -243,14 +275,16 @@ const ExamMarks: React.FC = () => {
         try {
           const parsedData = results.data as any[];
           console.log("CSV parsed:", parsedData);
-          
+
           let matchedCount = 0;
           const updatedMarks = studentMarks.map((student) => {
             // Try to match by roll_no (trim whitespace)
             const csvRow = parsedData.find(
-              (row) => String(row.roll_no || "").trim() === String(student.roll_no).trim()
+              (row) =>
+                String(row.roll_no || "").trim() ===
+                String(student.roll_no).trim()
             );
-            
+
             if (csvRow && csvRow.marks_obtained !== undefined) {
               matchedCount++;
               return {
@@ -260,7 +294,7 @@ const ExamMarks: React.FC = () => {
             }
             return student;
           });
-          
+
           setStudentMarks(updatedMarks);
           marksForm.setValue(
             "marks",
@@ -269,8 +303,10 @@ const ExamMarks: React.FC = () => {
               marks_obtained: s.marks_obtained,
             }))
           );
-          
-          setCsvUploadMessage(`✓ CSV uploaded! Matched ${matchedCount} of ${studentMarks.length} students.`);
+
+          setCsvUploadMessage(
+            `✓ CSV uploaded! Matched ${matchedCount} of ${studentMarks.length} students.`
+          );
           setTimeout(() => setCsvUploadMessage(""), 5000);
         } catch (err) {
           console.error("Error processing CSV:", err);
@@ -282,9 +318,9 @@ const ExamMarks: React.FC = () => {
         console.error("CSV parse error:", error);
         setCsvUploadMessage("Error reading CSV file.");
         setTimeout(() => setCsvUploadMessage(""), 5000);
-      }
+      },
     });
-    
+
     // Reset input
     e.target.value = "";
   };
@@ -297,18 +333,23 @@ const ExamMarks: React.FC = () => {
         student_name: s.student_name,
         marks_obtained: s.marks_obtained,
       }));
-      
+
       const csv = Papa.unparse(csvData);
       const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.setAttribute("download", `${selectedExam?.name || "marks"}_${new Date().toISOString().split('T')[0]}.csv`);
+      link.setAttribute(
+        "download",
+        `${selectedExam?.name || "marks"}_${
+          new Date().toISOString().split("T")[0]
+        }.csv`
+      );
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      
+
       setCsvUploadMessage("✓ CSV downloaded successfully!");
       setTimeout(() => setCsvUploadMessage(""), 3000);
     } catch (error) {
@@ -497,7 +538,11 @@ const ExamMarks: React.FC = () => {
                   </button>
                   <button
                     type="submit"
-                    disabled={isSubmitting || getSubjectOptions().length === 0 || getClassOptions().length === 0}
+                    disabled={
+                      isSubmitting ||
+                      getSubjectOptions().length === 0 ||
+                      getClassOptions().length === 0
+                    }
                     className="btn btn-primary w-full sm:w-auto"
                   >
                     {isSubmitting ? "Creating..." : "Create Exam"}
@@ -610,11 +655,12 @@ const ExamMarks: React.FC = () => {
               </p>
             </div>
           </div>
-          
+
           {csvUploadMessage && (
             <div
               className={`mb-4 p-3 rounded-md text-sm font-medium ${
-                csvUploadMessage.includes("Error") || csvUploadMessage.includes("error")
+                csvUploadMessage.includes("Error") ||
+                csvUploadMessage.includes("error")
                   ? "bg-red-50 text-red-700 border border-red-200"
                   : "bg-blue-50 text-blue-700 border border-blue-200"
               }`}
