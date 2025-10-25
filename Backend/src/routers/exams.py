@@ -33,8 +33,8 @@ async def create_exam(
     
     # Verify class assignment
     class_ = await session.get(Class, exam_data.class_id)
-    if not class_ or class_.teacher_id != teacher.id:
-        raise HTTPException(status_code=403, detail="You are not assigned to this class")
+    if not class_:
+        raise HTTPException(status_code=404, detail="Class not found")
     
     # Create exam with teacher_id
     exam_dict = exam_data.model_dump()
@@ -49,7 +49,9 @@ async def create_exam(
     return ExamResponse(
         id=db_exam.id,
         name=db_exam.name,
+        subject_id=db_exam.subject_id,
         subject_name=subject.name if subject else "Unknown",
+        class_id=db_exam.class_id,
         class_name=class_.name if class_ else "Unknown",
         max_marks=db_exam.max_marks,
         exam_date=db_exam.exam_date,
@@ -85,7 +87,9 @@ async def get_teacher_exams(
         {
             "id": exam.id,
             "name": exam.name,
+            "subject_id": exam.subject_id,
             "subject_name": subject.name,
+            "class_id": exam.class_id,
             "class_name": class_.name,
             "max_marks": exam.max_marks,
             "exam_date": exam.exam_date,
