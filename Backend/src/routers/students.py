@@ -5,7 +5,10 @@ from typing import List
 from src.db.main import get_session
 from src.auth.models import User, UserRole
 from src.auth.dependencies import get_current_active_user
-from src.models.models import Student, StudentCreate, StudentResponse, Marks, MarksCreate, Class, Teacher
+from src.models.models import (
+    Student, StudentCreate, StudentResponse, 
+    Marks, MarksCreate, Class, Teacher, TeacherAssignment
+)
 
 router = APIRouter()
 
@@ -72,14 +75,27 @@ async def list_students(
         if not teacher:
             raise HTTPException(status_code=404, detail="Teacher record not found")
         
-        teacher_classes_result = await session.exec(
+        # Get classes where teacher is class teacher
+        class_teacher_result = await session.exec(
             select(Class.id).where(Class.teacher_id == teacher.id)
         )
-        teacher_classes = teacher_classes_result.all()
-        if not teacher_classes:
+        class_teacher_classes = list(class_teacher_result.all())
+        
+        # Get classes where teacher has subject assignments
+        subject_teacher_result = await session.exec(
+            select(TeacherAssignment.class_id)
+            .where(TeacherAssignment.teacher_id == teacher.id)
+            .distinct()
+        )
+        subject_teacher_classes = list(subject_teacher_result.all())
+        
+        # Combine both lists (remove duplicates)
+        all_teacher_classes = list(set(class_teacher_classes + subject_teacher_classes))
+        
+        if not all_teacher_classes:
             return []
         
-        statement = statement.where(Student.class_id.in_(teacher_classes))
+        statement = statement.where(Student.class_id.in_(all_teacher_classes))
 
     elif current_user.role == UserRole.PRINCIPAL:
         school_classes_result = await session.exec(
@@ -234,6 +250,7 @@ async def delete_student(
     await session.commit()  
     return {"message": "Student deleted successfully"}
 
+# (Rest of the code remains the same - marks endpoints)
 #Record marks for a student
 @router.post("/marks", response_model=MarksCreate)
 async def record_marks(
